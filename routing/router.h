@@ -23,6 +23,16 @@ private:
     Router();
     Router(const Router&) = delete;
     Router& operator=(const Router&) = delete;
+    const QString USER_CONTROLLER = "UserController";
+    const QString TICKET_CONTROLLER = "TicketController";
+    const QString API_TICKET_CONTROLLER = "ApiTicketController";
+    const QString INDEX_ACTION = "index";
+    const QString STORE_ACTION = "store";
+    const QString CREATE_ACTION = "create";
+    const QString DESTROY_ACTION = "destroy";
+    const QString UPDATE_ACTION = "update";
+    const QString SHOW_ACTION = "show";
+    const QString EDIT_ACTION = "edit";
 
     QHash<RouteKey, Route> mRoutes;
 

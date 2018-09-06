@@ -28,6 +28,7 @@ TicketModel::TicketModel()
     mColumns.insert(ON_SERVICE_COL);
     mColumns.insert(IS_DONE_COL);
     mColumns.insert(WINDOW_NUMBER_COL);
+    mColumns.insert(IS_VOICED_COL);
     mColumns.insert(TicketActionModel::NAME_COL);
     mModel = new QSqlRelationalTableModel(nullptr, QSqlDatabase::database(mDb.connectionName()));
     mModel->setTable(TABLE_NAME);
@@ -104,7 +105,7 @@ QVector<Ticket> TicketModel::getNonServicedTickets()
 
 Ticket TicketModel::getOldestNonVoicedTicket()
 {
-    QString filter = QString("DATE('%1') = CURDATE() AND %2='0' AND %3='1'")
+    QString filter = QString("DATE(%1) = CURDATE() AND %2='0' AND %3='1'")
             .arg(CREATED_AT_COL)
             .arg(IS_VOICED_COL)
             .arg(ON_SERVICE_COL);

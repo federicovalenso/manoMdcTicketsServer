@@ -1,4 +1,3 @@
-#include <stdexcept>
 #include <QIntValidator>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -131,7 +130,6 @@ bool TicketController::validateRequest(HttpRequest &request)
     QByteArray is_done_param = TicketModel::IS_DONE_COL.toUtf8();
     QByteArray window_param = TicketModel::WINDOW_NUMBER_COL.toUtf8();
     QIntValidator id_validator;
-    params.value(id_param);
     id_validator.setBottom(1);
     if (params.contains(id_param) == true) {
         QString id(params.value(id_param));

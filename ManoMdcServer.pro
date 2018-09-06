@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     entities/ticket.cpp \
     entities/ticketaction.cpp \
     entities/entity.cpp \
-    entities/user.cpp
+    entities/user.cpp \
+    controllers/API/apiticketcontroller.cpp
 
 
 HEADERS  += requestmapper.h \
@@ -61,7 +62,8 @@ HEADERS  += requestmapper.h \
     entities/ticket.h \
     entities/ticketaction.h \
     entities/entity.h \
-    entities/user.h
+    entities/user.h \
+    controllers/API/apiticketcontroller.h
 
 win32:RC_ICONS += icon.ico
 
