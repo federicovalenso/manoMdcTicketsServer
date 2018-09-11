@@ -29,6 +29,7 @@ public:
     static const QString ID_COL;
     static const QString CREATED_AT_COL;
     static const QString UPDATED_AT_COL;
+    static const QByteArray ID_COL_PARAM;
 
 protected:
     const QString mTableName;

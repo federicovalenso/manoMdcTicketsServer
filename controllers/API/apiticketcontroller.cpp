@@ -2,6 +2,9 @@
 #include "apiticketcontroller.h"
 #include "entities/ticket.h"
 #include "models/ticketmodel.h"
+#include "validators/requestvalidator.h"
+#include "validators/rules/idrule.h"
+#include "validators/rules/boolrule.h"
 
 void ApiTicketController::update(stefanfrings::HttpRequest &request, stefanfrings::HttpResponse &response)
 {
@@ -25,24 +28,9 @@ void ApiTicketController::update(stefanfrings::HttpRequest &request, stefanfring
 
 bool ApiTicketController::validateRequest(stefanfrings::HttpRequest &request)
 {
-    bool result = false;
-    QByteArray id_param = TicketModel::ID_COL.toUtf8();
-    QByteArray is_voiced_param = TicketModel::IS_VOICED_COL.toUtf8();
-    int pos = 0;
-    auto params = request.getParameterMap();
-    if (params.contains(id_param)) {
-        QIntValidator id_validator;
-        id_validator.setBottom(1);
-        QString id(params.value(id_param));
-        if (id_validator.validate(id, pos) == QValidator::State::Acceptable) {
-            QIntValidator action_validator(0, 1);
-            if (params.contains(is_voiced_param)) {
-                QString is_voiced(params.value(is_voiced_param));
-                if (action_validator.validate(is_voiced, pos) == QValidator::State::Acceptable) {
-                    result = true;
-                }
-            }
-        }
-    }
-    return result;
+    auto parameters = request.getParameterMap();
+    RequestValidator validator;
+    validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
+            .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)));
+    return validator.Validate();
 }

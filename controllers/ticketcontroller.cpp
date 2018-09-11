@@ -12,6 +12,13 @@
 #include "entities/ticket.h"
 #include "entities/ticketaction.h"
 #include "entities/user.h"
+#include "validators/requestvalidator.h"
+#include "validators/rules/validationrule.h"
+#include "validators/rules/checkintrule.h"
+#include "validators/rules/idrule.h"
+#include "validators/rules/ifrule.h"
+#include "validators/rules/boolrule.h"
+#include "validators/rules/windowrule.h"
 
 using namespace stefanfrings;
 
@@ -122,37 +129,17 @@ void TicketController::update(HttpRequest& request, HttpResponse& response)
 
 bool TicketController::validateRequest(HttpRequest &request)
 {
-    bool result = false;
-    int pos = 0;
-    auto params = request.getParameterMap();
-    QByteArray id_param = TicketModel::ID_COL.toUtf8();
-    QByteArray on_service_param = TicketModel::ON_SERVICE_COL.toUtf8();
-    QByteArray is_done_param = TicketModel::IS_DONE_COL.toUtf8();
-    QByteArray window_param = TicketModel::WINDOW_NUMBER_COL.toUtf8();
-    QIntValidator id_validator;
-    id_validator.setBottom(1);
-    if (params.contains(id_param) == true) {
-        QString id(params.value(id_param));
-        if (id_validator.validate(id, pos) == QValidator::State::Acceptable) {
-            QIntValidator action_validator(0, 1);
-            QIntValidator window_validator(1, 8);
-            if (params.contains(on_service_param) && params.contains(is_done_param) && params.contains(window_param)) {
-                QString on_service(params.value(on_service_param));
-                QString is_done(params.value(is_done_param));
-                QString window(params.value(window_param));
-                if (action_validator.validate(on_service, pos) == QValidator::State::Acceptable &&
-                      action_validator.validate(is_done, pos) == QValidator::State::Acceptable &&
-                        window_validator.validate(window, pos) == QValidator::State::Acceptable) {
-                  if (on_service == "0") {
-                      if (is_done == "0") {
-                          result = true;
-                      }
-                  } else {
-                      result = true;
-                  }
-                }
-            }
-        }
-    }
-    return result;
+    auto parameters = request.getParameterMap();
+    RequestValidator validator;
+    CheckIntRule checkOnServiceValue(parameters.value(TicketModel::ON_SERVICE_PARAM), 0);
+    CheckIntRule checkIsDoneValue(parameters.value(TicketModel::IS_DONE_PARAM), 0);
+    validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
+            .AddRule(BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)))
+            .AddRule(BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)))
+            .AddRule(WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)))
+            .AddRule(IfRule<CheckIntRule, CheckIntRule, AlwaysTrueRule>(
+                         checkOnServiceValue,
+                         checkIsDoneValue,
+                         AlwaysTrueRule()));
+    return validator.Validate();
 }

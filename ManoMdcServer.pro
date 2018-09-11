@@ -37,7 +37,13 @@ SOURCES += main.cpp\
     entities/ticketaction.cpp \
     entities/entity.cpp \
     entities/user.cpp \
-    controllers/API/apiticketcontroller.cpp
+    controllers/API/apiticketcontroller.cpp \
+    validators/requestvalidator.cpp \
+    validators/rules/validationrule.cpp \
+    validators/rules/idrule.cpp \
+    validators/rules/windowrule.cpp \
+    validators/rules/checkintrule.cpp \
+    validators/rules/boolrule.cpp
 
 
 HEADERS  += requestmapper.h \
@@ -63,7 +69,14 @@ HEADERS  += requestmapper.h \
     entities/ticketaction.h \
     entities/entity.h \
     entities/user.h \
-    controllers/API/apiticketcontroller.h
+    controllers/API/apiticketcontroller.h \
+    validators/requestvalidator.h \
+    validators/rules/validationrule.h \
+    validators/rules/idrule.h \
+    validators/rules/ifrule.h \
+    validators/rules/windowrule.h \
+    validators/rules/checkintrule.h \
+    validators/rules/boolrule.h
 
 win32:RC_ICONS += icon.ico
 

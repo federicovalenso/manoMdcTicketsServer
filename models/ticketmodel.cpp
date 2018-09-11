@@ -18,6 +18,10 @@ const QString TicketModel::ON_SERVICE_COL = "on_service";
 const QString TicketModel::IS_DONE_COL = "is_done";
 const QString TicketModel::IS_VOICED_COL = "is_voiced";
 const QString TicketModel::WINDOW_NUMBER_COL = "window";
+const QByteArray TicketModel::ON_SERVICE_PARAM = ON_SERVICE_COL.toUtf8();
+const QByteArray TicketModel::IS_DONE_PARAM = IS_DONE_COL.toUtf8();
+const QByteArray TicketModel::IS_VOICED_PARAM = IS_VOICED_COL.toUtf8();
+const QByteArray TicketModel::WINDOW_NUMBER_PARAM = WINDOW_NUMBER_COL.toUtf8();
 
 TicketModel::TicketModel()
     : Model("TicketModel")
