@@ -33,10 +33,6 @@ SOURCES += main.cpp\
     controllers/usercontroller.cpp \
     gui/dlgusers.cpp \
     gui/dlgusereditor.cpp \
-    entities/ticket.cpp \
-    entities/ticketaction.cpp \
-    entities/entity.cpp \
-    entities/user.cpp \
     controllers/API/apiticketcontroller.cpp \
     validators/requestvalidator.cpp \
     validators/rules/validationrule.cpp \

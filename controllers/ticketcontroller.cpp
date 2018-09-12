@@ -72,6 +72,7 @@ void TicketController::store(HttpRequest& request, HttpResponse& response)
             QJsonObject jsonObject;
             jsonObject.insert(TICKET_NUMBER, ticketAction.prefix + QString::number(ticket.number_by_action));
             jsonObject.insert(ACTION_PARAM, QString(action));
+            jsonObject.insert(TicketModel::IS_VOICED_COL, ticket.is_voiced);
             QJsonDocument doc(std::move(jsonObject));
             response.write(doc.toJson());
         }
@@ -136,6 +137,7 @@ bool TicketController::validateRequest(HttpRequest &request)
     validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)))
+            .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)))
             .AddRule(WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)))
             .AddRule(IfRule<CheckIntRule, CheckIntRule, AlwaysTrueRule>(
                          checkOnServiceValue,
