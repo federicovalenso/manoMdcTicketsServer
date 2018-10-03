@@ -95,7 +95,7 @@ void TicketController::show(HttpRequest&, HttpResponse& response)
         QJsonDocument doc(std::move(jsonObject));
         response.write(doc.toJson());
     } else {
-        response.setStatus(400, "No tickets...");
+        response.write(QJsonDocument(QJsonObject()).toJson());
     }
 }
 
