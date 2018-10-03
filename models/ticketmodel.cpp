@@ -121,7 +121,7 @@ Ticket TicketModel::getOldestNonVoicedTicket()
     Ticket result;
     int rowCount = mModel->rowCount();
     if (rowCount > 0) {
-        result = extractFromRecord(mModel->record(rowCount - 1));
+        result = extractFromRecord(mModel->record(0));
     };
     return result;
 }
