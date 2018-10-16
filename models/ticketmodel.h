@@ -16,7 +16,7 @@ public:
     Ticket save(const TableOptions& options) noexcept;
     virtual QVector<Ticket> getAll();
     Ticket getById(int id) noexcept;
-    QVector<Ticket> getNonServicedTickets(bool on_service = false, bool is_manual = false);
+    QVector<Ticket> getAvailableTickets(bool on_service = false, bool is_manual = false);
     Ticket getOldestNonVoicedTicket();
     Ticket updateTicket(const TableOptions& options);
 

@@ -101,7 +101,7 @@ Ticket TicketModel::getById(int id) noexcept
     return result;
 }
 
-QVector<Ticket> TicketModel::getNonServicedTickets(bool on_service, bool is_manual)
+QVector<Ticket> TicketModel::getAvailableTickets(bool on_service, bool is_manual)
 {
     QVector<Ticket> result;
     QString filter = QString("DATE(%1) = CURDATE() AND %2 = %3")

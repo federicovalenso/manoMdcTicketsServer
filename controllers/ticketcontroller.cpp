@@ -44,7 +44,7 @@ void TicketController::index(HttpRequest& request, HttpResponse& response)
         QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
         QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
         QJsonArray jsonArr;
-        for (const auto& ticket : TicketModel().getNonServicedTickets(toBool(on_service), toBool((is_manual)))) {
+        for (const auto& ticket : TicketModel().getAvailableTickets(toBool(on_service), toBool((is_manual)))) {
             QJsonObject jsonObject;
             jsonObject.insert(TicketModel::ID_COL, ticket.id);
             jsonObject.insert(TicketModel::CREATED_AT_COL, ticket.created_at);
