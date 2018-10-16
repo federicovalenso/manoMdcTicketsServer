@@ -14,10 +14,11 @@
 #include "entities/user.h"
 #include "validators/requestvalidator.h"
 #include "validators/rules/validationrule.h"
-#include "validators/rules/checkintrule.h"
+#include "validators/rules/intrule.h"
 #include "validators/rules/idrule.h"
 #include "validators/rules/ifrule.h"
 #include "validators/rules/boolrule.h"
+#include "validators/rules/emptyvaluerule.h"
 #include "validators/rules/windowrule.h"
 
 using namespace stefanfrings;
@@ -27,29 +28,34 @@ const QByteArray TicketController::ACTION_PARAM = "action";
 const QString TicketController::TICKET_NUMBER = "ticket_number";
 const QString TicketController::WINDOW_NUMBER = "window_number";
 
+bool toBool(const QByteArray& value)
+{
+    return value == "1";
+}
+
 TicketController::TicketController()
 {}
 
 void TicketController::index(HttpRequest& request, HttpResponse& response)
 {
     response.setHeader("Content-Type", "application/json");
-    auto params = request.getParameterMap();
-    auto search = params.find(TicketModel::ON_SERVICE_COL.toUtf8());
-    if (search != params.end()) {
-        if (search.value().toInt() == 0) {
-            QJsonArray jsonArr;
-            for (const auto& ticket : TicketModel().getNonServicedTickets()) {
-                QJsonObject jsonObject;
-                jsonObject.insert(TicketModel::ID_COL, ticket.id);
-                jsonObject.insert(TicketModel::CREATED_AT_COL, ticket.created_at);
-                jsonObject.insert(TicketActionModel::NAME_COL, ticket.action);
-                TicketAction ticketAction = TicketActionModel().getByName(ticket.action);
-                jsonObject.insert(TICKET_NUMBER, ticketAction.prefix + QString::number(ticket.number_by_action));
-                jsonArr.append(std::move(jsonObject));
-            }
-            QJsonDocument jsonDoc(jsonArr);
-            response.write(jsonDoc.toJson(QJsonDocument::JsonFormat::Compact));
+    if (validateIndexRequest(request) == true) {
+        auto parameters = request.getParameterMap();
+        QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
+        QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
+        QJsonArray jsonArr;
+        for (const auto& ticket : TicketModel().getNonServicedTickets(toBool(on_service), toBool((is_manual)))) {
+            QJsonObject jsonObject;
+            jsonObject.insert(TicketModel::ID_COL, ticket.id);
+            jsonObject.insert(TicketModel::CREATED_AT_COL, ticket.created_at);
+            jsonObject.insert(TicketActionModel::NAME_COL, ticket.action);
+            jsonObject.insert(TicketModel::IS_MANUAL_COL, ticket.is_manual);
+            TicketAction ticketAction = TicketActionModel().getByName(ticket.action);
+            jsonObject.insert(TICKET_NUMBER, ticketAction.prefix + QString::number(ticket.number_by_action));
+            jsonArr.append(std::move(jsonObject));
         }
+        QJsonDocument jsonDoc(jsonArr);
+        response.write(jsonDoc.toJson(QJsonDocument::JsonFormat::Compact));
     } else {
         setClientError(response);
     }
@@ -102,7 +108,7 @@ void TicketController::show(HttpRequest&, HttpResponse& response)
 void TicketController::update(HttpRequest& request, HttpResponse& response)
 {
     response.setHeader("Content-Type", "application/json");
-    if (validateRequest(request) == true) {
+    if (validateUpdateRequest(request) == true) {
         auto params = request.getParameterMap();
         User user = UserModel().getByName(request.getParameter(USER_NAME_PARAM));
         if (user.id != -1) {
@@ -128,18 +134,35 @@ void TicketController::update(HttpRequest& request, HttpResponse& response)
     }
 }
 
-bool TicketController::validateRequest(HttpRequest &request)
+bool TicketController::validateIndexRequest(HttpRequest& request)
 {
     auto parameters = request.getParameterMap();
     RequestValidator validator;
-    CheckIntRule checkOnServiceValue(parameters.value(TicketModel::ON_SERVICE_PARAM), 0);
-    CheckIntRule checkIsDoneValue(parameters.value(TicketModel::IS_DONE_PARAM), 0);
+    QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
+    QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
+    validator.AddRule(IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
+                          EmptyValueRule(on_service),
+                          AlwaysTrueRule(),
+                          BoolRule(on_service)))
+            .AddRule(IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
+                         EmptyValueRule(is_manual),
+                         AlwaysTrueRule(),
+                         BoolRule(is_manual)));
+    return validator.Validate();
+}
+
+bool TicketController::validateUpdateRequest(HttpRequest& request)
+{
+    auto parameters = request.getParameterMap();
+    RequestValidator validator;
+    IntRule checkOnServiceValue(parameters.value(TicketModel::ON_SERVICE_PARAM), 0);
+    IntRule checkIsDoneValue(parameters.value(TicketModel::IS_DONE_PARAM), 0);
     validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)))
             .AddRule(WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)))
-            .AddRule(IfRule<CheckIntRule, CheckIntRule, AlwaysTrueRule>(
+            .AddRule(IfRule<IntRule, IntRule, AlwaysTrueRule>(
                          checkOnServiceValue,
                          checkIsDoneValue,
                          AlwaysTrueRule()));

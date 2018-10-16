@@ -13,6 +13,7 @@ struct Ticket : public Entity
     bool on_service = false;
     bool is_done = false;
     bool is_voiced = false;
+    bool is_manual = false;
     int window_number = -1;
 };
 

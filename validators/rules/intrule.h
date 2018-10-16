@@ -3,10 +3,10 @@
 
 #include "validationrule.h"
 
-class CheckIntRule : public ValidationRule
+class IntRule : public ValidationRule
 {
 public:
-    CheckIntRule(const QByteArray& parameter, int value);
+    IntRule(const QByteArray& parameter, int value);
     virtual bool Validate() const override;
 
 private:

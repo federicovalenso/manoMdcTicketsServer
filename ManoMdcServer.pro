@@ -11,6 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = ManoMdcServer
 TEMPLATE = app
 
+QMAKE_CXXFLAGS_RELEASE += -O2
 CONFIG += c++1z
 
 SOURCES += main.cpp\
@@ -38,8 +39,9 @@ SOURCES += main.cpp\
     validators/rules/validationrule.cpp \
     validators/rules/idrule.cpp \
     validators/rules/windowrule.cpp \
-    validators/rules/checkintrule.cpp \
-    validators/rules/boolrule.cpp
+    validators/rules/boolrule.cpp \
+    validators/rules/emptyvaluerule.cpp \
+    validators/rules/intrule.cpp
 
 
 HEADERS  += requestmapper.h \
@@ -71,8 +73,9 @@ HEADERS  += requestmapper.h \
     validators/rules/idrule.h \
     validators/rules/ifrule.h \
     validators/rules/windowrule.h \
-    validators/rules/checkintrule.h \
-    validators/rules/boolrule.h
+    validators/rules/boolrule.h \
+    validators/rules/emptyvaluerule.h \
+    validators/rules/intrule.h
 
 win32:RC_ICONS += icon.ico
 

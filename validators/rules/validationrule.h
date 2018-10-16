@@ -8,6 +8,7 @@ class ValidationRule
 {
 public:
     ValidationRule(const QByteArray& parameter = "");
+    virtual ~ValidationRule() = default;
     virtual bool Validate() const = 0;
     inline QByteArray getParameter() const noexcept
     {
@@ -21,9 +22,9 @@ public:
     }
 
     template <class _Rule>
-    static std::unique_ptr<_Rule> createRule(const _Rule& rule)
+    static std::unique_ptr<_Rule> createRule(_Rule&& rule)
     {
-        return std::make_unique<_Rule>(rule);
+        return std::make_unique<_Rule>(std::forward<_Rule>(rule));
     }
 
 protected:

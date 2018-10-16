@@ -15,13 +15,20 @@ const QString TicketModel::NUMBER_BY_ACTION_COL = "number_by_action";
 const QString TicketModel::ACTION_ID_COL = "action_id";
 const QString TicketModel::USER_ID_COL = "user_id";
 const QString TicketModel::ON_SERVICE_COL = "on_service";
+const QString TicketModel::IS_MANUAL_COL = "is_manual";
 const QString TicketModel::IS_DONE_COL = "is_done";
 const QString TicketModel::IS_VOICED_COL = "is_voiced";
 const QString TicketModel::WINDOW_NUMBER_COL = "window";
 const QByteArray TicketModel::ON_SERVICE_PARAM = ON_SERVICE_COL.toUtf8();
+const QByteArray TicketModel::IS_MANUAL_PARAM = IS_MANUAL_COL.toUtf8();
 const QByteArray TicketModel::IS_DONE_PARAM = IS_DONE_COL.toUtf8();
 const QByteArray TicketModel::IS_VOICED_PARAM = IS_VOICED_COL.toUtf8();
 const QByteArray TicketModel::WINDOW_NUMBER_PARAM = WINDOW_NUMBER_COL.toUtf8();
+
+QString fromBool(bool value)
+{
+    return value == true ? "1" : "0";
+}
 
 TicketModel::TicketModel()
     : Model("TicketModel")
@@ -31,8 +38,9 @@ TicketModel::TicketModel()
     mColumns.insert(USER_ID_COL);
     mColumns.insert(ON_SERVICE_COL);
     mColumns.insert(IS_DONE_COL);
-    mColumns.insert(WINDOW_NUMBER_COL);
     mColumns.insert(IS_VOICED_COL);
+    mColumns.insert(IS_MANUAL_COL);
+    mColumns.insert(WINDOW_NUMBER_COL);
     mColumns.insert(TicketActionModel::NAME_COL);
     mModel = new QSqlRelationalTableModel(nullptr, QSqlDatabase::database(mDb.connectionName()));
     mModel->setTable(TABLE_NAME);
@@ -93,12 +101,16 @@ Ticket TicketModel::getById(int id) noexcept
     return result;
 }
 
-QVector<Ticket> TicketModel::getNonServicedTickets()
+QVector<Ticket> TicketModel::getNonServicedTickets(bool on_service, bool is_manual)
 {
     QVector<Ticket> result;
-    QString filter = QString("DATE(%1) = CURDATE() AND %2 = 0")
+    QString filter = QString("DATE(%1) = CURDATE() AND %2 = %3")
             .arg(CREATED_AT_COL)
-            .arg(ON_SERVICE_COL);
+            .arg(ON_SERVICE_COL)
+            .arg(fromBool(on_service));
+    if (is_manual != true) {
+        filter.append(QString(" AND %1 = 0").arg(IS_MANUAL_COL));
+    }
     mModel->setFilter(filter);
     mModel->select();
     for (int i = 0; i < mModel->rowCount(); i++) {
@@ -182,6 +194,7 @@ Ticket TicketModel::extractFromRecord(const QSqlRecord& record)
     ticket.on_service = record.field(ON_SERVICE_COL).value().toBool();
     ticket.is_done = record.field(IS_DONE_COL).value().toBool();
     ticket.is_voiced = record.field(IS_VOICED_COL).value().toBool();
+    ticket.is_manual = record.field(IS_MANUAL_COL).value().toBool();
     ticket.window_number = record.field(WINDOW_NUMBER_COL).value().toInt();
     return ticket;
 }
