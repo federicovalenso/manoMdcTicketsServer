@@ -161,10 +161,11 @@ bool TicketController::validateUpdateRequest(HttpRequest& request)
             .AddRule(BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)))
             .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)))
+            .AddRule(BoolRule(parameters.value(TicketModel::IS_MANUAL_PARAM)))
             .AddRule(WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)))
             .AddRule(IfRule<IntRule, IntRule, AlwaysTrueRule>(
                          checkOnServiceValue,
                          checkIsDoneValue,
-                         AlwaysTrueRule()));
+                         AlwaysTrueRule()));;
     return validator.Validate();
 }
