@@ -33,29 +33,29 @@ QString fromBool(bool value)
 TicketModel::TicketModel()
     : Model("TicketModel")
 {
-    mColumns.insert(NUMBER_BY_ACTION_COL);
-    mColumns.insert(ACTION_ID_COL);
-    mColumns.insert(USER_ID_COL);
-    mColumns.insert(ON_SERVICE_COL);
-    mColumns.insert(IS_DONE_COL);
-    mColumns.insert(IS_VOICED_COL);
-    mColumns.insert(IS_MANUAL_COL);
-    mColumns.insert(WINDOW_NUMBER_COL);
-    mColumns.insert(TicketActionModel::NAME_COL);
-    mModel = new QSqlRelationalTableModel(nullptr, QSqlDatabase::database(mDb.connectionName()));
-    mModel->setTable(TABLE_NAME);
-    mModel->setRelation(ACTION_ID_COL_NUMBER,
+    columns_.insert(NUMBER_BY_ACTION_COL);
+    columns_.insert(ACTION_ID_COL);
+    columns_.insert(USER_ID_COL);
+    columns_.insert(ON_SERVICE_COL);
+    columns_.insert(IS_DONE_COL);
+    columns_.insert(IS_VOICED_COL);
+    columns_.insert(IS_MANUAL_COL);
+    columns_.insert(WINDOW_NUMBER_COL);
+    columns_.insert(TicketActionModel::NAME_COL);
+    model_ = new QSqlRelationalTableModel(nullptr, QSqlDatabase::database(database_.connectionName()));
+    model_->setTable(TABLE_NAME);
+    model_->setRelation(ACTION_ID_COL_NUMBER,
                         QSqlRelation(TicketActionModel::TABLE_NAME,
                                      TicketActionModel::ID_COL,
                                      TicketActionModel::NAME_COL));
-    mModel->setEditStrategy(QSqlTableModel::EditStrategy::OnRowChange);
+    model_->setEditStrategy(QSqlTableModel::EditStrategy::OnRowChange);
 }
 
 TicketModel::~TicketModel()
 {
-    delete mModel;
-    QSqlDatabase::database(mDb.connectionName()).close();
-    QSqlDatabase::removeDatabase(mDb.connectionName());
+    delete model_;
+    QSqlDatabase::database(database_.connectionName()).close();
+    QSqlDatabase::removeDatabase(database_.connectionName());
 }
 
 Ticket TicketModel::save(const TableOptions &options) noexcept
@@ -63,15 +63,15 @@ Ticket TicketModel::save(const TableOptions &options) noexcept
     Ticket result;
     QSqlRecord record;
     for (auto it = options.cbegin(); it != options.cend(); it++) {
-        if (mColumns.contains(it.key()) == false) {
+        if (columns_.contains(it.key()) == false) {
             return result;
         }
         QSqlField field(it.key());
         field.setValue(it.value());
         record.append(std::move(field));
     }
-    if (mModel->insertRecord(-1, record) == true) {
-        result = extractFromRecord(mModel->record(mModel->rowCount() - 1));
+    if (model_->insertRecord(-1, record) == true) {
+        result = extractFromRecord(model_->record(model_->rowCount() - 1));
     }
     return result;
 }
@@ -79,10 +79,10 @@ Ticket TicketModel::save(const TableOptions &options) noexcept
 QVector<Ticket> TicketModel::getAll()
 {
     QVector<Ticket> result;
-    mModel->setFilter("");
-    mModel->select();
-    for (int i = 0; i < mModel->rowCount(); i++) {
-      result.push_back(extractFromRecord(mModel->record(i)));
+    model_->setFilter("");
+    model_->select();
+    for (int i = 0; i < model_->rowCount(); i++) {
+      result.push_back(extractFromRecord(model_->record(i)));
     }
     return result;
 }
@@ -93,10 +93,10 @@ Ticket TicketModel::getById(int id) noexcept
     QString filter = QString("%1 = %2")
             .arg(ID_COL)
             .arg(id);
-    mModel->setFilter(filter);
-    mModel->select();
-    if (mModel->rowCount() > 0) {
-        result = extractFromRecord(mModel->record(0));
+    model_->setFilter(filter);
+    model_->select();
+    if (model_->rowCount() > 0) {
+        result = extractFromRecord(model_->record(0));
     }
     return result;
 }
@@ -111,10 +111,10 @@ QVector<Ticket> TicketModel::getAvailableTickets(bool on_service, bool is_manual
     if (is_manual != true) {
         filter.append(QString(" AND %1 = 0").arg(IS_MANUAL_COL));
     }
-    mModel->setFilter(filter);
-    mModel->select();
-    for (int i = 0; i < mModel->rowCount(); i++) {
-        result.push_back(extractFromRecord(mModel->record(i)));
+    model_->setFilter(filter);
+    model_->select();
+    for (int i = 0; i < model_->rowCount(); i++) {
+        result.push_back(extractFromRecord(model_->record(i)));
     }
     return result;
 }
@@ -126,14 +126,14 @@ Ticket TicketModel::getOldestNonVoicedTicket()
             .arg(IS_VOICED_COL)
             .arg(ON_SERVICE_COL);
     QString actionsFilter;
-    mModel->setSort(CREATED_AT_COL_NUMBER,
+    model_->setSort(CREATED_AT_COL_NUMBER,
                                  Qt::SortOrder::AscendingOrder);
-    mModel->setFilter(filter);
-    mModel->select();
+    model_->setFilter(filter);
+    model_->select();
     Ticket result;
-    int rowCount = mModel->rowCount();
+    int rowCount = model_->rowCount();
     if (rowCount > 0) {
-        result = extractFromRecord(mModel->record(0));
+        result = extractFromRecord(model_->record(0));
     };
     return result;
 }
@@ -146,18 +146,18 @@ Ticket TicketModel::updateTicket(const TableOptions &options)
                 .arg(TABLE_NAME)
                 .arg(ID_COL)
                 .arg(options.value(ID_COL).toString());
-        mModel->setFilter(filter);
-        mModel->select();
-        if (mModel->rowCount() == 1) {
+        model_->setFilter(filter);
+        model_->select();
+        if (model_->rowCount() == 1) {
             QSqlRecord record;
             for (auto it = options.cbegin(); it != options.cend(); it++) {
                 QSqlField field(it.key());
                 field.setValue(it.value());
                 record.append(std::move(field));
             }
-            mModel->setRecord(0, std::move(record));
-            if (mModel->submit() == true) {
-                result = extractFromRecord(mModel->record(0));
+            model_->setRecord(0, std::move(record));
+            if (model_->submit() == true) {
+                result = extractFromRecord(model_->record(0));
             }
         }
     }
@@ -170,7 +170,7 @@ bool TicketModel::validateOptions(const TableOptions &options)
     if (options.size() > 0) {
         size_t errors = 0;
         for (auto it = options.cbegin(); it != options.cend(); it++) {
-            if (mColumns.contains(it.key()) == false) {
+            if (columns_.contains(it.key()) == false) {
                 errors++;
                 break;
             }

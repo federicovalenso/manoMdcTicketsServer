@@ -32,9 +32,9 @@ public:
     static const QByteArray ID_COL_PARAM;
 
 protected:
-    const QString mTableName;
-    TableColumns mColumns;
-    Database mDb;
+    const QString table_name_;
+    TableColumns columns_;
+    Database database_;
 };
 
 #endif // MODEL_H

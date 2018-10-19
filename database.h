@@ -22,9 +22,9 @@ private:
     const QString DB_TYPE = "QMYSQL";
     const QString CONNECTION_NAME_PREFIX = "mano";
 
-    AppSettings& mSettings = AppSettings::getInstance();
-    QString mConnectionName;
-    bool mIsValid;
+    AppSettings& settings_ = AppSettings::getInstance();
+    QString connection_name_;
+    bool is_valid_;
 
     void setConnection() noexcept;
 };

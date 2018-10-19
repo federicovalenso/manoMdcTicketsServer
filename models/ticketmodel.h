@@ -14,7 +14,7 @@ public:
     TicketModel();
     ~TicketModel();
     Ticket save(const TableOptions& options) noexcept;
-    virtual QVector<Ticket> getAll();
+    QVector<Ticket> getAll();
     Ticket getById(int id) noexcept;
     QVector<Ticket> getAvailableTickets(bool on_service = false, bool is_manual = false);
     Ticket getOldestNonVoicedTicket();
@@ -38,7 +38,7 @@ public:
     static const QByteArray WINDOW_NUMBER_PARAM;
 
 private:
-    QSqlRelationalTableModel* mModel;
+    QSqlRelationalTableModel* model_;
 
     bool validateOptions(const TableOptions& options);
     Ticket extractFromRecord(const QSqlRecord& record);

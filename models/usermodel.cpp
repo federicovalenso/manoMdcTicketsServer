@@ -14,10 +14,17 @@ QString UserModel::hashPassword(const QByteArray &password)
 UserModel::UserModel()
     : Model("UserModel")
 {
-    mColumns.insert(NAME_COL);
-    mColumns.insert(PASSWORD_COL);
-    mSqlTableModel = new QSqlTableModel(nullptr, QSqlDatabase::database(mDb.connectionName()));
-    mSqlTableModel->setTable(TABLE_NAME);
+    columns_.insert(NAME_COL);
+    columns_.insert(PASSWORD_COL);
+    model_ = std::make_unique<QSqlTableModel>(nullptr, QSqlDatabase::database(database_.connectionName()));
+    model_->setTable(TABLE_NAME);
+}
+
+UserModel::~UserModel()
+{
+    model_.reset();
+    QSqlDatabase::database(database_.connectionName()).close();
+    QSqlDatabase::removeDatabase(database_.connectionName());
 }
 
 int UserModel::save(const TableOptions &) noexcept
@@ -34,11 +41,11 @@ QList<Entity> UserModel::getAll()
 User UserModel::getByName(const QString &name) noexcept
 {
     QString filter = QString("%1='%2'").arg(NAME_COL).arg(name);
-    mSqlTableModel->setFilter(filter);
-    mSqlTableModel->select();
+    model_->setFilter(filter);
+    model_->select();
     User result;
-    if (mSqlTableModel->rowCount() == 1) {
-        auto record = mSqlTableModel->record(0);
+    if (model_->rowCount() == 1) {
+        auto record = model_->record(0);
         result.id = record.field(Model::ID_COL).value().toInt();
         result.name = record.field(NAME_COL).value().toString();
     }
@@ -50,11 +57,11 @@ User UserModel::authorize(const QByteArray &name, const QByteArray &password) no
     QString filter = QString(NAME_COL + "='%1' AND " + PASSWORD_COL +"='%2'")
                      .arg(QString(name))
                      .arg(hashPassword(password));
-    mSqlTableModel->setFilter(filter);
-    mSqlTableModel->select();
+    model_->setFilter(filter);
+    model_->select();
     User result;
-    if (mSqlTableModel->rowCount() == 1) {
-        auto record = mSqlTableModel->record(0);
+    if (model_->rowCount() == 1) {
+        auto record = model_->record(0);
         result.id = record.field(Model::ID_COL).value().toInt();
         result.name = record.field(NAME_COL).value().toString();
     }
@@ -63,5 +70,5 @@ User UserModel::authorize(const QByteArray &name, const QByteArray &password) no
 
 QSqlTableModel *UserModel::getSqlTableModel() const
 {
-    return mSqlTableModel;
+    return model_.get();
 }

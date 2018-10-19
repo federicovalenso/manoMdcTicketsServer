@@ -10,13 +10,14 @@ dlgUsers::dlgUsers(QWidget *parent) :
     ui(new Ui::dlgUsers)
 {
     ui->setupUi(this);
-    QSqlTableModel *sqlTableModel = model.getSqlTableModel();
+    QSqlTableModel *sqlTableModel = model_.getSqlTableModel();
     sqlTableModel->setEditStrategy(QSqlTableModel::OnRowChange);
     sqlTableModel->select();
-    sqlTableModel->setHeaderData(1, Qt::Horizontal, tr("ФИО"));
+    sqlTableModel->setHeaderData(1, Qt::Horizontal, tr("Пользователь"));
+    sqlTableModel->setHeaderData(2, Qt::Horizontal, tr("ФИО"));
     ui->twUsers->setModel(sqlTableModel);
     ui->twUsers->hideColumn(0);
-    ui->twUsers->hideColumn(2);
+    ui->twUsers->hideColumn(3);
 }
 
 dlgUsers::~dlgUsers()
@@ -26,7 +27,8 @@ dlgUsers::~dlgUsers()
 
 void dlgUsers::resizeEvent(QResizeEvent *event)
 {
-    ui->twUsers->setColumnWidth(1, this->width());
+    ui->twUsers->setColumnWidth(1, this->width() / 3);
+    ui->twUsers->setColumnWidth(2, this->width() / 3 * 2);
     QDialog::resizeEvent(event);
 }
 
@@ -34,22 +36,32 @@ void dlgUsers::updateListView()
 {
 }
 
-void dlgUsers::on_twUsers_doubleClicked(const QModelIndex &index)
+void dlgUsers::editUser(const QModelIndex &index)
 {
-    dlgUserEditor editor;
+    UserEditDialog editor;
     editor.setModel(ui->twUsers->model());
     editor.setCurrentModelIndex(index);
     editor.exec();
 }
 
+void dlgUsers::on_twUsers_doubleClicked(const QModelIndex &index)
+{
+    editUser(index);
+}
+
 void dlgUsers::on_btnAdd_clicked()
 {
-    QSqlTableModel *sqlTableModel = model.getSqlTableModel();
-    if (sqlTableModel->insertRow(sqlTableModel->rowCount()) == true) {
-        dlgUserEditor editor;
-        editor.setModel(ui->twUsers->model());
+    auto* sql_model = ui->twUsers->model();
+    if (sql_model->insertRow(sql_model->rowCount()) == true) {
+        UserEditDialog editor;
+        editor.setModel(sql_model);
         editor.setCurrentModelIndex(
-                    sqlTableModel->index(sqlTableModel->rowCount(), 1));
+                    sql_model->index(sql_model->rowCount() - 1, 1));
         editor.exec();
     }
+}
+
+void dlgUsers::on_btnEdit_clicked()
+{
+
 }

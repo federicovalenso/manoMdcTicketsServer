@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>dlgUserEditor</class>
- <widget class="QDialog" name="dlgUserEditor">
+ <class>UserEditDialog</class>
+ <widget class="QDialog" name="UserEditDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>532</width>
-    <height>178</height>
+    <height>206</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,24 +16,24 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="lblName">
        <property name="text">
         <string>ФИО:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="1" column="1">
       <widget class="QLineEdit" name="leName"/>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="lblPass1">
        <property name="text">
         <string>Пароль:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="2" column="1">
       <widget class="QLineEdit" name="lePass1">
        <property name="enabled">
         <bool>false</bool>
@@ -43,7 +43,7 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="3" column="1">
       <widget class="QLineEdit" name="lePass2">
        <property name="enabled">
         <bool>false</bool>
@@ -53,14 +53,14 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="3" column="0">
       <widget class="QLabel" name="lblPass2">
        <property name="text">
         <string>Пароль (подтверждение):</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="4" column="1">
       <widget class="QCheckBox" name="cbChangePass">
        <property name="text">
         <string>Изменить пароль</string>
@@ -69,6 +69,16 @@
         <bool>false</bool>
        </property>
       </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lblUser">
+       <property name="text">
+        <string>Пользователь</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="leUser"/>
      </item>
     </layout>
    </item>
@@ -94,12 +104,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>leUser</tabstop>
+  <tabstop>leName</tabstop>
+  <tabstop>lePass1</tabstop>
+  <tabstop>lePass2</tabstop>
+  <tabstop>cbChangePass</tabstop>
+  <tabstop>leHashedPass</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>dlgUserEditor</receiver>
+   <receiver>UserEditDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -115,7 +133,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>dlgUserEditor</receiver>
+   <receiver>UserEditDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

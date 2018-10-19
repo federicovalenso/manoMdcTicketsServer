@@ -10,8 +10,8 @@ const QString TicketActionModel::PREFIX_COL = "prefix";
 TicketActionModel::TicketActionModel()
     : Model("TicketActionModel")
 {
-    mColumns.insert(TicketActionModel::NAME_COL);
-    mSqlTableModel = new QSqlTableModel(nullptr, QSqlDatabase::database(mDb.connectionName()));
+    columns_.insert(TicketActionModel::NAME_COL);
+    mSqlTableModel = new QSqlTableModel(nullptr, QSqlDatabase::database(database_.connectionName()));
     mSqlTableModel->setTable(TicketActionModel::TABLE_NAME);
 }
 

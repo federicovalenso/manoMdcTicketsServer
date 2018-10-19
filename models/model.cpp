@@ -8,11 +8,11 @@ const QString Model::UPDATED_AT_COL = "updated_at";
 const QByteArray Model::ID_COL_PARAM = ID_COL.toUtf8();
 
 Model::Model(const QString &owner) :
-    mDb(owner)
+    database_(owner)
 {
-    mColumns.insert(Model::ID_COL);
-    mColumns.insert(Model::CREATED_AT_COL);
-    mColumns.insert(Model::UPDATED_AT_COL);
+    columns_.insert(Model::ID_COL);
+    columns_.insert(Model::CREATED_AT_COL);
+    columns_.insert(Model::UPDATED_AT_COL);
 }
 
 Model::~Model()
@@ -20,5 +20,5 @@ Model::~Model()
 
 bool Model::isValid()
 {
-    return mDb.isValid();
+    return database_.isValid();
 }

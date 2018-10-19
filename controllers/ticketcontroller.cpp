@@ -36,6 +36,7 @@ bool toBool(const QByteArray& value)
 TicketController::TicketController()
 {}
 
+//TODO: сделать блокировку обрабатываемых талонов, чтобы избежать взаимных модификаций
 void TicketController::index(HttpRequest& request, HttpResponse& response)
 {
     response.setHeader("Content-Type", "application/json");

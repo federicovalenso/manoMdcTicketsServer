@@ -7,16 +7,16 @@
 
 
 namespace Ui {
-class dlgUserEditor;
+class UserEditDialog;
 }
 
-class dlgUserEditor : public QDialog
+class UserEditDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit dlgUserEditor(QWidget *parent = 0);
-    ~dlgUserEditor();
+    explicit UserEditDialog(QWidget *parent = nullptr);
+    ~UserEditDialog() override;
 
     void setModel(QAbstractItemModel*);
     void setCurrentModelIndex(const QModelIndex&);
@@ -26,9 +26,10 @@ public slots:
 
 private slots:
     void on_cbChangePass_stateChanged(int state);
+    void on_buttonBox_accepted();
 
 private:
-    Ui::dlgUserEditor *ui;
+    Ui::UserEditDialog *ui;
     QDataWidgetMapper* mapper;
 };
 
