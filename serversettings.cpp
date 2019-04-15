@@ -1,84 +1,100 @@
-#include "appsettings.h"
+#include <QCoreApplication>
+#include <QDir>
 
-AppSettings& AppSettings::getInstance()
-{
-    static AppSettings instance;
-    return instance;
+#include "serversettings.h"
+
+QString ServerSettings::searchConfigFile() {
+  QString binDir = QCoreApplication::applicationDirPath();
+  QString appName = QCoreApplication::applicationName();
+  QString fileName("config.ini");
+
+  QStringList searchList;
+  searchList.append(binDir);
+  searchList.append(binDir + "/etc");
+  searchList.append(binDir + "/../etc");
+  searchList.append(binDir + "/../../etc");
+  searchList.append(binDir + "/../" + appName + "/etc");
+  searchList.append(binDir + "/../../" + appName + "/etc");
+  searchList.append(binDir + "/../../../" + appName + "/etc");
+  searchList.append(binDir + "/../../../../" + appName + "/etc");
+  searchList.append(binDir + "/../../../../../" + appName + "/etc");
+  searchList.append(QDir::rootPath() + "etc/opt");
+  searchList.append(QDir::rootPath() + "etc");
+
+  foreach (QString dir, searchList) {
+    QFile file(dir + "/" + fileName);
+    if (file.exists()) {
+      // found
+      fileName = QDir(file.fileName()).canonicalPath();
+      qDebug("Using config file %s", qPrintable(fileName));
+      return fileName;
+    }
+  }
+
+  // not found
+  foreach (QString dir, searchList) {
+    qWarning("%s/%s not found", qPrintable(dir), qPrintable(fileName));
+  }
+  qFatal("Cannot find config file %s", qPrintable(fileName));
 }
 
-AppSettings::AppSettings()
-{
-    ReadSettings();
+ServerSettings& ServerSettings::getInstance() {
+  static ServerSettings instance;
+  return instance;
 }
 
-void AppSettings::setConnectionSettings(
-        const QString& serverAddr,
-        const QString& baseName,
-        const QString& userName,
-        const QString& password)
-{
-    mServerAddr = serverAddr;
-    mBaseName = baseName;
-    mUserName = userName;
-    mPassword = password;
-    mSettings.beginGroup(CONNECTION_GROUP);
-    mSettings.setValue(SERVER_ADDR, serverAddr);
-    mSettings.setValue(BASE_NAME, baseName);
-    mSettings.setValue(USER_NAME, userName);
-    mSettings.setValue(PASSWORD, password);
-    mSettings.endGroup();
+ServerSettings::ServerSettings()
+    : settings_file_(searchConfigFile()),
+      settings_(settings_file_, QSettings::Format::IniFormat, qApp) {}
+
+void ServerSettings::setConnectionSettings(const QString& serverAddr,
+                                           const QString& baseName,
+                                           const QString& userName,
+                                           const QString& password) {
+  settings_.beginGroup(CONNECTION_GROUP);
+  settings_.setValue(SERVER_ADDR, serverAddr);
+  settings_.setValue(BASE_NAME, baseName);
+  settings_.setValue(USER_NAME, userName);
+  settings_.setValue(PASSWORD, password);
+  settings_.endGroup();
+  settings_.sync();
 }
 
-void AppSettings::setSizeSettings(const QByteArray &mainWindowGeometry, const QByteArray &mainWindowState)
-{
-    mMainWindowGeometry = mainWindowGeometry;
-    mMainWindowState = mainWindowState;
-    mSettings.beginGroup(SIZE_GROUP);
-    mSettings.setValue(MAIN_WINDOW_GEOMETRY, mainWindowGeometry);
-    mSettings.setValue(MAIN_WINDOW_STATE, mainWindowState);
-    mSettings.endGroup();
+QString ServerSettings::getPassword() const {
+  return settings_.value(CONNECTION_GROUP + "/" + PASSWORD).toString();
 }
 
-QString AppSettings::getPassword() const
-{
-    return mPassword;
+const QString& ServerSettings::getSettingsFile() const {
+  return settings_file_;
 }
 
-QString AppSettings::getUserName() const
-{
-    return mUserName;
+QString ServerSettings::getUserName() const {
+  return settings_.value(CONNECTION_GROUP + "/" + USER_NAME).toString();
 }
 
-QString AppSettings::getBaseName() const
-{
-    return mBaseName;
+QString ServerSettings::getBaseName() const {
+  return settings_.value(CONNECTION_GROUP + "/" + BASE_NAME).toString();
 }
 
-QString AppSettings::getServerAddr() const
-{
-    return mServerAddr;
+QString ServerSettings::getServerAddr() const {
+  return settings_.value(CONNECTION_GROUP + "/" + SERVER_ADDR).toString();
 }
 
-QByteArray AppSettings::getMainWindowState() const
-{
-    return mMainWindowState;
+#ifdef QT_GUI_LIB
+void AppSettings::setSizeSettings(const QByteArray& mainWindowGeometry,
+                                  const QByteArray& mainWindowState) {
+  settings_.beginGroup(SIZE_GROUP);
+  settings_.setValue(MAIN_WINDOW_GEOMETRY, mainWindowGeometry);
+  settings_.setValue(MAIN_WINDOW_STATE, mainWindowState);
+  settings_.endGroup();
+  settings_.sync();
 }
 
-QByteArray AppSettings::getMainWindowGeometry() const
-{
-    return mMainWindowGeometry;
+QByteArray AppSettings::getMainWindowState() const {
+  return settings_.value(SIZE_GROUP + "/" + MAIN_WINDOW_STATE).toByteArray();
 }
 
-void AppSettings::ReadSettings()
-{
-    mSettings.beginGroup(CONNECTION_GROUP);
-    mServerAddr = mSettings.value(SERVER_ADDR).toString();
-    mBaseName = mSettings.value(BASE_NAME).toString();
-    mUserName = mSettings.value(USER_NAME).toString();
-    mPassword = mSettings.value(PASSWORD).toString();
-    mSettings.endGroup();
-    mSettings.beginGroup(SIZE_GROUP);
-    mMainWindowGeometry = mSettings.value(MAIN_WINDOW_GEOMETRY).toByteArray();
-    mMainWindowState = mSettings.value(MAIN_WINDOW_STATE).toByteArray();
-    mSettings.endGroup();
+QByteArray AppSettings::getMainWindowGeometry() const {
+  return settings_.value(SIZE_GROUP + "/" + MAIN_WINDOW_GEOMETRY).toByteArray();
 }
+#endif

@@ -1,28 +1,32 @@
 #ifndef TICKETACTIONMODEL_H
 #define TICKETACTIONMODEL_H
 
+#include <memory>
+
 #include <QJsonArray>
-#include <QVector>
-#include <QSqlTableModel>
 #include <QSqlRecord>
-#include "model.h"
+#include <QSqlTableModel>
+#include <QVector>
+
 #include "entities/ticketaction.h"
+#include "model.h"
 
-class TicketActionModel : public Model
-{
-public:
-    TicketActionModel();
-    QList<TicketAction> getAll();
-    int save(const TableOptions &options) noexcept;
-    TicketAction getByName(const QString& name) noexcept;
-    QVector<TicketAction> getByNamesArray(const QJsonArray& names);
+class TicketActionModel : public Model {
+ public:
+  static const QString TABLE_NAME;
+  static const QString NAME_COL;
+  static const QString PREFIX_COL;
 
-    static const QString TABLE_NAME;
-    static const QString NAME_COL;
-    static const QString PREFIX_COL;
+  TicketActionModel();
+  ~TicketActionModel();
 
-private:
-    QSqlTableModel* mSqlTableModel;
+  std::optional<TicketAction> getByName(const QString& name) noexcept;
+
+  QVector<TicketAction> getAll();
+  QVector<TicketAction> getByNamesArray(const QJsonArray& names);
+
+ private:
+  std::unique_ptr<QSqlTableModel> model_;
 };
 
-#endif // TICKETACTIONMODEL_H
+#endif  // TICKETACTIONMODEL_H

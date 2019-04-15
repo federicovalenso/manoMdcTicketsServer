@@ -6,7 +6,7 @@
 #include <QDialog>
 #include <QString>
 
-#include "appsettings.h"
+#include "serversettings.h"
 #include "database.h"
 
 class DlgDbConnection : public QDialog
@@ -27,7 +27,7 @@ private slots:
 
 private:
     Ui::dlgdbconnection *ui;
-    AppSettings& mSettings = AppSettings::getInstance();
+    ServerSettings& mSettings = ServerSettings::getInstance();
 //    Database& mDb = Database::getInstance();
     void saveSettings();
 };

@@ -2,16 +2,9 @@
 #define ENTITY_H
 
 #include <QString>
-#include <cinttypes>
 
-struct Entity
-{
-    int id = -1;
-
-    inline bool isValid()
-    {
-        return id != -1 ? true : false;
-    }
+struct Entity {
+  int id;
 };
 
-#endif // ENTITY_H
+#endif  // ENTITY_H

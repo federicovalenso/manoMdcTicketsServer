@@ -1,113 +1,81 @@
+#ifdef QT_GUI_LIB
 #include <QApplication>
-#include <QStringList>
-#include <QDir>
 #include <QMessageBox>
-
-#include "httplistener.h"
-#include "templatecache.h"
-#include "httpsessionstore.h"
-#include "staticfilecontroller.h"
-#include "filelogger.h"
-#include "requestmapper.h"
 #include "gui/mainwindow.h"
+#else
+#include <QCoreApplication>
+#endif
+#include <QStringList>
+
+#include "filelogger.h"
+#include "httplistener.h"
+#include "httpsessionstore.h"
+#include "requestmapper.h"
+#include "serversettings.h"
+#include "staticfilecontroller.h"
+#include "templatecache.h"
 
 using namespace stefanfrings;
 
-/** Cache for template files */
-TemplateCache* templateCache;
+static HttpListener* listener;
 
-/** Storage for session cookies */
-HttpSessionStore* sessionStore;
+int main(int argc, char* argv[]) {
+  QStringList paths = QCoreApplication::libraryPaths();
+  paths.append(".");
+  paths.append("platforms");
+  paths.append("sqldrivers");
+  paths.append("imageformats");
+  paths.append("iconengines");
+  QCoreApplication::setLibraryPaths(paths);
 
-/** Controller for static files */
-StaticFileController* staticFileController;
+#ifdef QT_GUI_LIB
+  QApplication app(argc, argv);
+#else
+  QCoreApplication app(argc, argv);
+#endif
 
-/** Redirects log messages to a file */
-FileLogger* logger;
+  app.setOrganizationName("MANO \'MDC\'");
+  app.setApplicationName("Mano \'MDC\' Server App");
 
+  QString configFileName = ServerSettings::getInstance().getSettingsFile();
 
-/** Search the configuration file */
-QString searchConfigFile()
-{
-    QString binDir=QCoreApplication::applicationDirPath();
-    QString appName=QCoreApplication::applicationName();
-    QString fileName("config.ini");
+  QSettings* logSettings =
+      new QSettings(configFileName, QSettings::IniFormat, &app);
+  logSettings->beginGroup("logging");
+  RequestMapper::logger = new FileLogger(logSettings, 10000, &app);
+  RequestMapper::logger->installMsgHandler();
 
-    QStringList searchList;
-    searchList.append(binDir);
-    searchList.append(binDir+"/etc");
-    searchList.append(binDir+"/../etc");
-    searchList.append(binDir+"/../../etc"); // for development without shadow build
-    searchList.append(binDir+"/../"+appName+"/etc"); // for development with shadow build
-    searchList.append(binDir+"/../../"+appName+"/etc"); // for development with shadow build
-    searchList.append(binDir+"/../../../"+appName+"/etc"); // for development with shadow build
-    searchList.append(binDir+"/../../../../"+appName+"/etc"); // for development with shadow build
-    searchList.append(binDir+"/../../../../../"+appName+"/etc"); // for development with shadow build
-    searchList.append(QDir::rootPath()+"etc/opt");
-    searchList.append(QDir::rootPath()+"etc");
+  QSettings* templateSettings =
+      new QSettings(configFileName, QSettings::IniFormat, &app);
+  templateSettings->beginGroup("templates");
+  RequestMapper::templateCache = new TemplateCache(templateSettings, &app);
 
-    foreach (QString dir, searchList)
-    {
-        QFile file(dir+"/"+fileName);
-        if (file.exists())
-        {
-            // found
-            fileName=QDir(file.fileName()).canonicalPath();
-            qDebug("Using config file %s",qPrintable(fileName));
-            return fileName;
-        }
-    }
+  QSettings* sessionSettings =
+      new QSettings(configFileName, QSettings::IniFormat, &app);
+  sessionSettings->beginGroup("sessions");
+  RequestMapper::sessionStore = new HttpSessionStore(sessionSettings, &app);
 
-    // not found
-    foreach (QString dir, searchList)
-    {
-        qWarning("%s/%s not found",qPrintable(dir),qPrintable(fileName));
-    }
-    qFatal("Cannot find config file %s",qPrintable(fileName));
-    return 0;
-}
+  QSettings* fileSettings =
+      new QSettings(configFileName, QSettings::IniFormat, &app);
+  fileSettings->beginGroup("docroot");
+  RequestMapper::staticFileController =
+      new StaticFileController(fileSettings, &app);
 
-int main(int argc, char *argv[])
-{
-    QStringList paths = QCoreApplication::libraryPaths();
-    paths.append(".");
-    paths.append("imageformats");
-    paths.append("platforms");
-    paths.append("sqldrivers");
-    paths.append("iconengines");
-    QCoreApplication::setLibraryPaths(paths);
+  // Configure and start the TCP listener
+  QSettings* listenerSettings =
+      new QSettings(configFileName, QSettings::IniFormat, &app);
+  listenerSettings->beginGroup("listener");
+  listener = new HttpListener(listenerSettings, new RequestMapper(&app), &app);
 
-    QApplication app(argc, argv);
-    QApplication::setStyle("Fusion");
-    app.setOrganizationName("MANO \'MDC\'");
-    app.setApplicationName("Mano \'MDC\' Server App");
+  qWarning("Application has started");
 
-    QString configFileName=searchConfigFile();
+#ifdef QT_GUI_LIB
+  QApplication::setStyle("Fusion");
+  MainWindow mainWindow;
+  mainWindow.show();
+#endif
+  app.exec();
 
-    QSettings* templateSettings=new QSettings(configFileName,QSettings::IniFormat,&app);
-    templateSettings->beginGroup("templates");
-    templateCache=new TemplateCache(templateSettings,&app);
-
-    // Configure session store
-    QSettings* sessionSettings=new QSettings(configFileName,QSettings::IniFormat,&app);
-    sessionSettings->beginGroup("sessions");
-    sessionStore=new HttpSessionStore(sessionSettings,&app);
-
-    // Configure static file controller
-    QSettings* fileSettings=new QSettings(configFileName,QSettings::IniFormat,&app);
-    fileSettings->beginGroup("docroot");
-    staticFileController=new StaticFileController(fileSettings,&app);
-
-    // Configure and start the TCP listener
-    QSettings* listenerSettings=new QSettings(configFileName,QSettings::IniFormat,&app);
-    listenerSettings->beginGroup("listener");
-    new HttpListener(listenerSettings,new RequestMapper(&app),&app);
-
-    qWarning("Application has started");
-
-    MainWindow mainWindow;
-    mainWindow.show();
-    app.exec();
-
-    qWarning("Application has stopped");
+  qWarning("Application has stopped");
+  return 0;
 }

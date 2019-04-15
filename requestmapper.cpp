@@ -3,45 +3,33 @@
   @author Stefan Frings
 */
 
-#include <QCoreApplication>
 #include "requestmapper.h"
-#include "filelogger.h"
-#include "staticfilecontroller.h"
+#include <QCoreApplication>
 #include "routing/router.h"
 
-/** Redirects log messages to a file */
-extern FileLogger* logger;
+HttpSessionStore* RequestMapper::sessionStore = nullptr;
+StaticFileController* RequestMapper::staticFileController = nullptr;
+TemplateCache* RequestMapper::templateCache = nullptr;
+Logger* RequestMapper::logger = nullptr;
 
-/** Controller for static files */
-extern StaticFileController* staticFileController;
-
-RequestMapper::RequestMapper(QObject* parent)
-    :HttpRequestHandler(parent)
-{
-    qDebug("RequestMapper: created");
+RequestMapper::RequestMapper(QObject* parent) : HttpRequestHandler(parent) {
+  qDebug("RequestMapper: created");
 }
 
+RequestMapper::~RequestMapper() { qDebug("RequestMapper: deleted"); }
 
-RequestMapper::~RequestMapper()
-{
-    qDebug("RequestMapper: deleted");
-}
+void RequestMapper::service(HttpRequest& request, HttpResponse& response) {
+  QByteArray path = request.getPath();
+  qDebug("RequestMapper: path=%s", path.data());
+  Router& router = Router::getInstance();
 
+  if (router.executeRoute(request, response) == false) {
+    staticFileController->service(request, response);
+  }
+  qDebug("RequestMapper: finished request");
 
-void RequestMapper::service(HttpRequest& request, HttpResponse& response)
-{
-    QByteArray path = request.getPath();
-    qDebug("RequestMapper: path=%s",path.data());
-    Router& router = Router::getInstance();
-
-    if (router.executeRoute(request, response) == false) {
-        staticFileController->service(request, response);
-    }
-    qDebug("RequestMapper: finished request");
-
-    // Clear the log buffer
-    if (logger)
-    {
-       logger->clear();
-    }
+  // Clear the log buffer
+  if (logger) {
+    logger->clear();
+  }
 }

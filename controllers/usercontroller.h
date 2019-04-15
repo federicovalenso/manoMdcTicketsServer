@@ -3,15 +3,15 @@
 
 #include "modelcontroller.h"
 
-class UserController : public ModelController
-{
-public:
-    UserController();
+class UserController : public ModelController {
+ public:
+  UserController();
 
-    virtual void show(stefanfrings::HttpRequest &, stefanfrings::HttpResponse &) override;
+  virtual void show(stefanfrings::HttpRequest &,
+                    stefanfrings::HttpResponse &) override;
 
-    static const QByteArray SESSION_PARAM_USER;
-    static const QByteArray SESSION_PARAM_LOGINTIME;
+  static const QByteArray SESSION_PARAM_USER;
+  static const QByteArray SESSION_PARAM_LOGINTIME;
 };
 
-#endif // USERCONTROLLER_H
+#endif  // USERCONTROLLER_H
