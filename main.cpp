@@ -7,6 +7,7 @@
 #endif
 #include <QStringList>
 
+#include "databasemigrator.h"
 #include "filelogger.h"
 #include "httplistener.h"
 #include "httpsessionstore.h"
@@ -14,6 +15,9 @@
 #include "serversettings.h"
 #include "staticfilecontroller.h"
 #include "templatecache.h"
+
+#include <iostream>
+#include <stdexcept>
 
 using namespace stefanfrings;
 
@@ -38,6 +42,14 @@ int main(int argc, char* argv[]) {
   app.setApplicationName("Mano \'MDC\' Server App");
 
   QString configFileName = ServerSettings::getInstance().getSettingsFile();
+
+  try {
+    DatabaseMigrator dbm;
+    dbm.migrate();
+  } catch (std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
 
   QSettings* logSettings =
       new QSettings(configFileName, QSettings::IniFormat, &app);

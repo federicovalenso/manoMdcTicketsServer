@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QtSql>
 
+const QString Database::DB_TYPE = "QMYSQL";
+
 Database::Database(const QString& owner)
     : connection_name_(
           CONNECTION_NAME_PREFIX + owner +

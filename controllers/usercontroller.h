@@ -10,7 +10,8 @@ class UserController : public ModelController {
   virtual void show(stefanfrings::HttpRequest &,
                     stefanfrings::HttpResponse &) override;
 
-  static const QByteArray SESSION_PARAM_USER;
+  static const QByteArray SESSION_PARAM_USER_ID;
+  static const QByteArray SESSION_PARAM_USER_NAME;
   static const QByteArray SESSION_PARAM_LOGINTIME;
 };
 

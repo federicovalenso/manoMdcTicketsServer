@@ -17,7 +17,6 @@ class TicketModel : public Model {
 
   std::optional<Ticket> save(const TableOptions& options) noexcept;
   std::optional<Ticket> updateTicket(const TableOptions& options) noexcept;
-  std::optional<Ticket> getById(int id) noexcept;
   std::optional<Ticket> getOldestNonVoicedTicket() noexcept;
 
   QVector<Ticket> getAll() noexcept;

@@ -81,17 +81,6 @@ QVector<Ticket> TicketModel::getAll() noexcept {
   return result;
 }
 
-optional<Ticket> TicketModel::getById(int id) noexcept {
-  Ticket result;
-  QString filter = QString("%1 = %2").arg(ID_COL).arg(id);
-  model_->setFilter(filter);
-  model_->select();
-  if (model_->rowCount() > 0) {
-    return extractFromRecord(model_->record(0));
-  }
-  return nullopt;
-}
-
 QVector<Ticket> TicketModel::getAvailableTickets(bool on_service,
                                                  bool is_manual) noexcept {
   QVector<Ticket> result;
@@ -136,6 +125,8 @@ optional<Ticket> TicketModel::updateTicket(
                          .arg(options.value(ID_COL).toString());
     model_->setFilter(filter);
     model_->select();
+    qDebug() << model_->query().lastError();
+    qDebug() << model_->query().lastQuery();
     if (model_->rowCount() == 1) {
       QSqlRecord record;
       for (auto it = options.cbegin(); it != options.cend(); it++) {

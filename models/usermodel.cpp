@@ -36,6 +36,18 @@ QList<std::unique_ptr<Entity>> UserModel::getAll() {
 
 std::optional<User> UserModel::getByName(const QString &name) noexcept {
   QString filter = QString("%1='%2'").arg(NAME_COL).arg(name);
+  return selectByFilter(move(filter));
+}
+
+std::optional<User> UserModel::authorize(const QByteArray &name,
+                                         const QByteArray &password) noexcept {
+  QString filter = QString(NAME_COL + "='%1' AND " + PASSWORD_COL + "='%2'")
+                       .arg(QString(name))
+                       .arg(hashPassword(password));
+  return selectByFilter(move(filter));
+}
+
+std::optional<User> UserModel::selectByFilter(QString filter) {
   model_->setFilter(filter);
   model_->select();
   if (model_->rowCount() == 1) {
@@ -47,16 +59,6 @@ std::optional<User> UserModel::getByName(const QString &name) noexcept {
   } else {
     return nullopt;
   }
-}
-
-bool UserModel::authorize(const QByteArray &name,
-                          const QByteArray &password) noexcept {
-  QString filter = QString(NAME_COL + "='%1' AND " + PASSWORD_COL + "='%2'")
-                       .arg(QString(name))
-                       .arg(hashPassword(password));
-  model_->setFilter(filter);
-  model_->select();
-  return model_->rowCount() == 1;
 }
 
 QSqlTableModel *UserModel::getSqlTableModel() const { return model_.get(); }

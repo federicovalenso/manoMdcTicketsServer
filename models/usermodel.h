@@ -22,10 +22,12 @@ class UserModel : public Model {
   int save(const TableOptions& options) noexcept;
   virtual QList<std::unique_ptr<Entity>> getAll();
   std::optional<User> getByName(const QString& name) noexcept;
-  bool authorize(const QByteArray& name, const QByteArray& password) noexcept;
+  std::optional<User> authorize(const QByteArray& name,
+                                const QByteArray& password) noexcept;
 
  private:
   std::unique_ptr<QSqlTableModel> model_;
+  std::optional<User> selectByFilter(QString filter);
 };
 
 #endif  // USERMODEL_H

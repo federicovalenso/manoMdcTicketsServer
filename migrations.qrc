@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/migrations">
+        <file>etc/migrations/1557100800.sql</file>
+    </qresource>
+</RCC>

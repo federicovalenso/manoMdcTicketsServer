@@ -9,6 +9,8 @@
 
 class Database {
  public:
+  static const QString DB_TYPE;
+
   Database(const QString& owner);
   ~Database();
 
@@ -18,7 +20,6 @@ class Database {
   QString connectionName() const;
 
  private:
-  const QString DB_TYPE = "QMYSQL";
   const QString CONNECTION_NAME_PREFIX = "mano";
 
   ServerSettings& settings_ = ServerSettings::getInstance();

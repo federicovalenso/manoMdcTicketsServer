@@ -19,7 +19,6 @@ class TicketController : public ModelController {
                       stefanfrings::HttpResponse&) override;
 
  private:
-  static const QByteArray USER_NAME_PARAM;
   static const QByteArray ACTION_PARAM;
   static const QString TICKET_NUMBER;
   static const QString WINDOW_NUMBER;

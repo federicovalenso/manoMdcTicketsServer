@@ -34,7 +34,6 @@ FORMS += \
     gui/dlgusers.ui \
     gui/dlgusereditor.ui
 } else {
-message(non-GUI mode)
 QT -= gui
 }
 
@@ -65,7 +64,8 @@ SOURCES += main.cpp\
     validators/rules/boolrule.cpp \
     validators/rules/emptyvaluerule.cpp \
     validators/rules/intrule.cpp \
-    serversettings.cpp
+    serversettings.cpp \
+    databasemigrator.cpp
 
 HEADERS  += requestmapper.h \
     database.h \
@@ -92,10 +92,14 @@ HEADERS  += requestmapper.h \
     validators/rules/boolrule.h \
     validators/rules/emptyvaluerule.h \
     validators/rules/intrule.h \
-    serversettings.h
+    serversettings.h \
+    databasemigrator.h
 
-OTHER_FILES += etc/* etc/docroot/* etc/templates/* etc/ssl/* logs/*
+OTHER_FILES += etc/* etc/docroot/* etc/templates/* etc/ssl/* logs/* etc/migrations/*
 
 include(logging/logging.pri)
 include(httpserver/httpserver.pri)
 include(templateengine/templateengine.pri)
+
+RESOURCES += \
+    migrations.qrc

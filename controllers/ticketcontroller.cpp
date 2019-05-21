@@ -25,7 +25,6 @@
 using namespace std;
 using namespace stefanfrings;
 
-const QByteArray TicketController::USER_NAME_PARAM = "user_name";
 const QByteArray TicketController::ACTION_PARAM = "action";
 const QString TicketController::TICKET_NUMBER = "ticket_number";
 const QString TicketController::WINDOW_NUMBER = "window_number";
@@ -34,10 +33,10 @@ inline bool toBool(const QByteArray &value) { return value == "1"; }
 
 TicketController::TicketController() {}
 
-bool checkLogin(HttpRequest &request, HttpResponse &response) {
+QVariant getLoggedInUserId(HttpRequest &request, HttpResponse &response) {
   auto session =
       RequestMapper::sessionStore->getSession(request, response, false);
-  return session.contains(UserController::SESSION_PARAM_USER);
+  return session.get(UserController::SESSION_PARAM_USER_ID);
 }
 
 void TicketController::index(HttpRequest &request, HttpResponse &response) {
@@ -69,7 +68,7 @@ void TicketController::index(HttpRequest &request, HttpResponse &response) {
 
 void TicketController::store(HttpRequest &request, HttpResponse &response) {
   response.setHeader("Content-Type", "application/json");
-  if (!checkLogin(request, response)) {
+  if (auto user_id = getLoggedInUserId(request, response); user_id.isNull()) {
     setUnauthorizedError(response);
     return;
   }
@@ -97,7 +96,7 @@ void TicketController::store(HttpRequest &request, HttpResponse &response) {
 
 void TicketController::show(HttpRequest &request, HttpResponse &response) {
   response.setHeader("Content-Type", "application/json");
-  if (!checkLogin(request, response)) {
+  if (auto user_id = getLoggedInUserId(request, response); user_id.isNull()) {
     setUnauthorizedError(response);
     return;
   }
@@ -119,7 +118,8 @@ void TicketController::show(HttpRequest &request, HttpResponse &response) {
 
 void TicketController::update(HttpRequest &request, HttpResponse &response) {
   response.setHeader("Content-Type", "application/json");
-  if (!checkLogin(request, response)) {
+  auto user_id = getLoggedInUserId(request, response);
+  if (user_id.isNull()) {
     setUnauthorizedError(response);
     return;
   }
@@ -137,26 +137,15 @@ void TicketController::update(HttpRequest &request, HttpResponse &response) {
     setClientError(response);
     return;
   }
-  if (auto user = UserModel().getByName(request.getParameter(USER_NAME_PARAM));
-      user) {
-    TicketModel ticketModel;
-    if (auto ticket = ticketModel.getById(id); ticket) {
-      TableOptions options;
-      options.insert(TicketModel::USER_ID_COL, user->id);
-      for (auto it = params.cbegin(); it != params.cend(); it++) {
-        if (it.key() != USER_NAME_PARAM) {
-          options.insert(it.key(), it.value());
-        }
-      }
-      ticket = ticketModel.updateTicket(options);
-      if (ticket) {
-        response.setStatus(200);
-      } else {
-        setClientError(response);
-      }
-    } else {
-      setClientError(response);
-    }
+  TicketModel ticketModel;
+  TableOptions options;
+  options.insert(TicketModel::USER_ID_COL, user_id.toInt());
+  for (auto it = params.cbegin(); it != params.cend(); it++) {
+    options.insert(it.key(), it.value());
+  }
+  auto ticket = ticketModel.updateTicket(options);
+  if (ticket) {
+    response.setStatus(200);
   } else {
     setClientError(response);
   }
