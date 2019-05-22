@@ -11,6 +11,7 @@
 DatabaseMigrator::DatabaseMigrator() {
   QSqlDatabase db = QSqlDatabase::addDatabase(Database::DB_TYPE, "migrator");
   db.setHostName(settings_.getServerAddr());
+  db.setPort(settings_.getPort());
   db.setUserName(settings_.getUserName());
   db.setPassword(settings_.getPassword());
   if (!db.open()) {

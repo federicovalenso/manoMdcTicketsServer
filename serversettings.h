@@ -16,6 +16,7 @@ class ServerSettings {
                        const QByteArray& mainWindowState);
 
   QString getServerAddr() const;
+  int getPort() const;
   QString getBaseName() const;
   QString getUserName() const;
   QString getPassword() const;
@@ -29,6 +30,7 @@ class ServerSettings {
  private:
   const QString CONNECTION_GROUP = "/connetion";
   const QString SERVER_ADDR = "server_addr";
+  const QString PORT = "port";
   const QString BASE_NAME = "base_name";
   const QString USER_NAME = "user_name";
   const QString PASSWORD = "password";

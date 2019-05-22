@@ -80,6 +80,10 @@ QString ServerSettings::getServerAddr() const {
   return settings_.value(CONNECTION_GROUP + "/" + SERVER_ADDR).toString();
 }
 
+int ServerSettings::getPort() const {
+  return settings_.value(CONNECTION_GROUP + "/" + PORT, 3306).toInt();
+}
+
 #ifdef QT_GUI_LIB
 void AppSettings::setSizeSettings(const QByteArray& mainWindowGeometry,
                                   const QByteArray& mainWindowState) {

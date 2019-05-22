@@ -33,6 +33,7 @@ void Database::setConnection() noexcept {
   } else {
     db = QSqlDatabase::addDatabase(DB_TYPE, connection_name_);
     db.setHostName(settings_.getServerAddr());
+    db.setPort(settings_.getPort());
     db.setDatabaseName(settings_.getBaseName());
     db.setUserName(settings_.getUserName());
     db.setPassword(settings_.getPassword());
