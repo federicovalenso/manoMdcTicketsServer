@@ -34,7 +34,7 @@ void Database::setConnection() noexcept {
     db = QSqlDatabase::addDatabase(DB_TYPE, connection_name_);
     db.setHostName(settings_.getServerAddr());
     db.setPort(settings_.getPort());
-    db.setDatabaseName(settings_.getBaseName());
+    db.setDatabaseName(ServerSettings::BASE_NAME);
     db.setUserName(settings_.getUserName());
     db.setPassword(settings_.getPassword());
     is_valid_ = db.open();

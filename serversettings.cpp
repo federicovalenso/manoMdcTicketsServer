@@ -3,6 +3,8 @@
 
 #include "serversettings.h"
 
+const QString ServerSettings::BASE_NAME = "clinic_queue";
+
 QString ServerSettings::searchConfigFile() {
   QString binDir = QCoreApplication::applicationDirPath();
   QString appName = QCoreApplication::applicationName();
@@ -48,20 +50,18 @@ ServerSettings::ServerSettings()
       settings_(settings_file_, QSettings::Format::IniFormat, qApp) {}
 
 void ServerSettings::setConnectionSettings(const QString& serverAddr,
-                                           const QString& baseName,
                                            const QString& userName,
                                            const QString& password) {
-  settings_.beginGroup(CONNECTION_GROUP);
-  settings_.setValue(SERVER_ADDR, serverAddr);
-  settings_.setValue(BASE_NAME, baseName);
-  settings_.setValue(USER_NAME, userName);
-  settings_.setValue(PASSWORD, password);
+  settings_.beginGroup(kConnectionGroup);
+  settings_.setValue(kServerAddress, serverAddr);
+  settings_.setValue(kUserName, userName);
+  settings_.setValue(kPassword, password);
   settings_.endGroup();
   settings_.sync();
 }
 
 QString ServerSettings::getPassword() const {
-  return settings_.value(CONNECTION_GROUP + "/" + PASSWORD).toString();
+  return settings_.value(kConnectionGroup + "/" + kPassword).toString();
 }
 
 const QString& ServerSettings::getSettingsFile() const {
@@ -69,19 +69,15 @@ const QString& ServerSettings::getSettingsFile() const {
 }
 
 QString ServerSettings::getUserName() const {
-  return settings_.value(CONNECTION_GROUP + "/" + USER_NAME).toString();
-}
-
-QString ServerSettings::getBaseName() const {
-  return settings_.value(CONNECTION_GROUP + "/" + BASE_NAME).toString();
+  return settings_.value(kConnectionGroup + "/" + kUserName).toString();
 }
 
 QString ServerSettings::getServerAddr() const {
-  return settings_.value(CONNECTION_GROUP + "/" + SERVER_ADDR).toString();
+  return settings_.value(kConnectionGroup + "/" + kServerAddress).toString();
 }
 
 int ServerSettings::getPort() const {
-  return settings_.value(CONNECTION_GROUP + "/" + PORT, 3306).toInt();
+  return settings_.value(kConnectionGroup + "/" + kPort, 3306).toInt();
 }
 
 #ifdef QT_GUI_LIB

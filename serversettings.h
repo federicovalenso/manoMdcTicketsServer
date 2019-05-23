@@ -9,15 +9,15 @@ class ServerSettings {
  public:
   static ServerSettings& getInstance();
   static QString searchConfigFile();
+  static const QString BASE_NAME;
 
-  void setConnectionSettings(const QString& serverAddr, const QString& baseName,
-                             const QString& userName, const QString& password);
+  void setConnectionSettings(const QString& serverAddr, const QString& userName,
+                             const QString& password);
   void setSizeSettings(const QByteArray& mainWindowGeometry,
                        const QByteArray& mainWindowState);
 
   QString getServerAddr() const;
   int getPort() const;
-  QString getBaseName() const;
   QString getUserName() const;
   QString getPassword() const;
 #ifdef QT_GUI_LIB
@@ -28,13 +28,12 @@ class ServerSettings {
   const QString& getSettingsFile() const;
 
  private:
-  const QString CONNECTION_GROUP = "/connetion";
-  const QString SERVER_ADDR = "server_addr";
-  const QString PORT = "port";
-  const QString BASE_NAME = "base_name";
-  const QString USER_NAME = "user_name";
-  const QString PASSWORD = "password";
-  const QString SIZE_GROUP = "/size";
+  const QString kConnectionGroup = "/connetion";
+  const QString kServerAddress = "server_addr";
+  const QString kPort = "port";
+  const QString kUserName = "user_name";
+  const QString kPassword = "password";
+  const QString kSizeGroup = "/size";
 #ifdef QT_GUI_LIB
   const QString MAIN_WINDOW_GEOMETRY = "main_window_geometry";
   const QString MAIN_WINDOW_STATE = "main_window_state";

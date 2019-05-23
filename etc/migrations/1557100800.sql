@@ -5,8 +5,8 @@ SET time_zone = "+08:00";
 
 -- --------------------------------------------------------
 
-CREATE DATABASE queue_test;
-USE queue_test;
+CREATE DATABASE clinic_queue;
+USE clinic_queue;
 
 --
 -- Структура таблицы `ticketActions`

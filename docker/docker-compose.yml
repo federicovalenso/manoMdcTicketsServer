@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+        mariadb:
+                container_name: mariadb
+                image: mariadb:latest          
+                command: 
+                        - --character-set-server=utf8mb4
+                        - --collation-server=utf8mb4_unicode_ci
+                ports: 
+                        - "3310:3306"
+                environment:
+                        - MYSQL_ROOT_PASSWORD=ctsp1qazxsw2
+                volumes:
+                        - db-volume:/var/lib/mysql
+                        
+        cts:
+                container_name: ctserver
+                restart: on-failure
+                build: 
+                        context: .        
+                        dockerfile: ./app.dockerfile
+                ports:
+                        - "8085:8085"
+                depends_on:
+                        - mariadb
+                        
+volumes:
+        db-volume:
