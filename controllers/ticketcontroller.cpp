@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QSqlField>
 
+#include <rules>
 #include "entities/ticketaction.h"
 #include "entities/user.h"
 #include "models/ticketactionmodel.h"
@@ -13,14 +14,6 @@
 #include "requestmapper.h"
 #include "ticketcontroller.h"
 #include "usercontroller.h"
-#include "validators/requestvalidator.h"
-#include "validators/rules/boolrule.h"
-#include "validators/rules/emptyvaluerule.h"
-#include "validators/rules/idrule.h"
-#include "validators/rules/ifrule.h"
-#include "validators/rules/intrule.h"
-#include "validators/rules/validationrule.h"
-#include "validators/rules/windowrule.h"
 
 using namespace std;
 using namespace stefanfrings;
@@ -158,31 +151,27 @@ void TicketController::update(HttpRequest &request, HttpResponse &response) {
 
 bool TicketController::validateIndexRequest(HttpRequest &request) noexcept {
   auto parameters = request.getParameterMap();
-  RequestValidator validator;
   QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
   QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
-  validator
-      .AddRule(IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
-          EmptyValueRule(on_service), AlwaysTrueRule(), BoolRule(on_service)))
-      .AddRule(IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
+  return Validate(
+      IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
+          EmptyValueRule(on_service), AlwaysTrueRule(), BoolRule(on_service)),
+      IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
           EmptyValueRule(is_manual), AlwaysTrueRule(), BoolRule(is_manual)));
-  return validator.Validate();
 }
 
 bool TicketController::validateUpdateRequest(HttpRequest &request) noexcept {
   auto parameters = request.getParameterMap();
-  RequestValidator validator;
   IntRule checkOnServiceValue(parameters.value(TicketModel::ON_SERVICE_PARAM),
                               0);
   IntRule checkIsDoneValue(parameters.value(TicketModel::IS_DONE_PARAM), 0);
-  validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
-      .AddRule(BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)))
-      .AddRule(BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)))
-      .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)))
-      .AddRule(BoolRule(parameters.value(TicketModel::IS_MANUAL_PARAM)))
-      .AddRule(WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)))
-      .AddRule(IfRule<IntRule, IntRule, AlwaysTrueRule>(
+  return Validate(
+      IdRule(parameters.value(TicketModel::ID_COL_PARAM)),
+      BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)),
+      BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)),
+      BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)),
+      BoolRule(parameters.value(TicketModel::IS_MANUAL_PARAM)),
+      WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)),
+      IfRule<IntRule, IntRule, AlwaysTrueRule>(
           checkOnServiceValue, checkIsDoneValue, AlwaysTrueRule()));
-  ;
-  return validator.Validate();
 }

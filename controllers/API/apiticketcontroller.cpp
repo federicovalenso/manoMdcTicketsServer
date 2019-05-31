@@ -1,7 +1,6 @@
 #include "apiticketcontroller.h"
 #include "entities/ticket.h"
 #include "models/ticketmodel.h"
-#include "validators/requestvalidator.h"
 #include "validators/rules/boolrule.h"
 #include "validators/rules/idrule.h"
 
@@ -26,8 +25,6 @@ void ApiTicketController::update(stefanfrings::HttpRequest &request,
 
 bool ApiTicketController::validateRequest(stefanfrings::HttpRequest &request) {
   auto parameters = request.getParameterMap();
-  RequestValidator validator;
-  validator.AddRule(IdRule(parameters.value(TicketModel::ID_COL_PARAM)))
-      .AddRule(BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)));
-  return validator.Validate();
+  return Validate(IdRule(parameters.value(TicketModel::ID_COL_PARAM)),
+                  BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)));
 }

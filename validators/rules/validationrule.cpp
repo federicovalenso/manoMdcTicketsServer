@@ -1,24 +1,15 @@
-#include <QDebug>
 #include "validationrule.h"
+#include <QDebug>
 
-ValidationRule::ValidationRule(const QByteArray& parameter) :
-    parameter_(parameter)
-{}
+ValidationRule::ValidationRule(const QByteArray& parameter)
+    : parameter_(parameter) {}
 
-AlwaysTrueRule::AlwaysTrueRule(const QByteArray&) :
-    ValidationRule ()
-{}
+ValidationRule::operator bool() { return Validate(); }
 
-bool AlwaysTrueRule::Validate() const
-{
-    return true;
-}
+AlwaysTrueRule::AlwaysTrueRule(const QByteArray&) : ValidationRule() {}
 
-AlwaysFalseRule::AlwaysFalseRule(const QByteArray &) :
-    ValidationRule ()
-{}
+bool AlwaysTrueRule::Validate() const { return true; }
 
-bool AlwaysFalseRule::Validate() const
-{
-    return false;
-}
+AlwaysFalseRule::AlwaysFalseRule(const QByteArray&) : ValidationRule() {}
+
+bool AlwaysFalseRule::Validate() const { return false; }

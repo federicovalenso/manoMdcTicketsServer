@@ -57,7 +57,6 @@ SOURCES += main.cpp\
     models/usermodel.cpp \
     controllers/usercontroller.cpp \
     controllers/API/apiticketcontroller.cpp \
-    validators/requestvalidator.cpp \
     validators/rules/validationrule.cpp \
     validators/rules/idrule.cpp \
     validators/rules/windowrule.cpp \
@@ -84,7 +83,6 @@ HEADERS  += requestmapper.h \
     entities/entity.h \
     entities/user.h \
     controllers/API/apiticketcontroller.h \
-    validators/requestvalidator.h \
     validators/rules/validationrule.h \
     validators/rules/idrule.h \
     validators/rules/ifrule.h \
@@ -103,3 +101,6 @@ include(templateengine/templateengine.pri)
 
 RESOURCES += \
     migrations.qrc
+
+DISTFILES += \
+    rules
