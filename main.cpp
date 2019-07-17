@@ -1,10 +1,4 @@
-#ifdef QT_GUI_LIB
-#include <QApplication>
-#include <QMessageBox>
-#include "gui/mainwindow.h"
-#else
 #include <QCoreApplication>
-#endif
 #include <QStringList>
 
 #include "databasemigrator.h"
@@ -31,13 +25,7 @@ int main(int argc, char* argv[]) {
   paths.append("imageformats");
   paths.append("iconengines");
   QCoreApplication::setLibraryPaths(paths);
-
-#ifdef QT_GUI_LIB
-  QApplication app(argc, argv);
-#else
   QCoreApplication app(argc, argv);
-#endif
-
   app.setOrganizationName("MANO \'MDC\'");
   app.setApplicationName("Mano \'MDC\' Server App");
 
@@ -80,12 +68,6 @@ int main(int argc, char* argv[]) {
   listener = new HttpListener(listenerSettings, new RequestMapper(&app), &app);
 
   qWarning("Application has started");
-
-#ifdef QT_GUI_LIB
-  QApplication::setStyle("Fusion");
-  MainWindow mainWindow;
-  mainWindow.show();
-#endif
   app.exec();
 
   qWarning("Application has stopped");

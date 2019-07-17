@@ -12,11 +12,10 @@ const QString Database::DB_TYPE = "QMYSQL";
 Database::Database(const QString& owner)
     : connection_name_(
           CONNECTION_NAME_PREFIX + owner +
-          QString::number((long long)QThread::currentThreadId(), 16)) {
+          QString::number((long long)QThread::currentThreadId(), 16)),
+      is_valid_(false) {
   setConnection();
 }
-
-Database::~Database() {}
 
 bool Database::startTransaction() noexcept {
   return QSqlDatabase::database(connection_name_).transaction();
@@ -28,7 +27,7 @@ bool Database::commitTransaction() noexcept {
 
 void Database::setConnection() noexcept {
   QSqlDatabase db = QSqlDatabase::database(connection_name_, false);
-  if (db.isValid() == true) {
+  if (db.isValid()) {
     is_valid_ = true;
   } else {
     db = QSqlDatabase::addDatabase(DB_TYPE, connection_name_);

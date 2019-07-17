@@ -26,7 +26,7 @@ class RequestMapper : public HttpRequestHandler {
   static Logger* logger;
 
   RequestMapper(QObject* parent = nullptr);
-  ~RequestMapper();
+  ~RequestMapper() override = default;
 
   /**
     Передает входящий HTTP-запрос в роутер.
@@ -34,7 +34,7 @@ class RequestMapper : public HttpRequestHandler {
     @param request Http-запрос
     @param response Используется для вывода ответа на запрос
   */
-  void service(HttpRequest& request, HttpResponse& response);
+  void service(HttpRequest& request, HttpResponse& response) override;
 };
 
 #endif  // REQUESTMAPPER_H

@@ -17,7 +17,7 @@ DatabaseMigrator::DatabaseMigrator() {
   if (!db.open()) {
     throw std::runtime_error(db.lastError().databaseText().toUtf8());
   }
-  query_ = new QSqlQuery(std::move(db));
+  query_ = new QSqlQuery(db);
 }
 
 DatabaseMigrator::~DatabaseMigrator() {

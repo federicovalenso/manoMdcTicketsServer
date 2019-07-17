@@ -29,7 +29,7 @@ maxMultiPartSize=10000000\n\
 [connetion]\n\
 server_addr=mariadb\n\
 user_name=root\n\
-password=ctsp1qazxsw2\n\
+password=D@kthf90\n\
 [templates]\n\
 path=templates\n\
 suffix=.tpl\n\
@@ -44,7 +44,7 @@ cacheTime=60000\n\
 cacheSize=1000000\n\
 maxCachedFileSize=65536\n\
 [sessions]\n\
-expirationTime=3600000\n\
+expirationTime=36000000\n\
 cookieName=sessionid\n\
 cookiePath=/\n\
 cookieComment=Identifies the user\n\
@@ -56,5 +56,8 @@ maxSize=1000000\n\
 maxBackups=2\n\
 timestampFormat=dd.MM.yyyy hh:mm:ss.zzz\n\
 msgFormat={timestamp} {typeNr} {type} {thread} {msg}' > /etc/config.ini
+
+ENV TZ=Asia/Irkutsk
+RUN apt-get install tzdata -y && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENTRYPOINT ["/root/build/ClinicTicketsServer"]

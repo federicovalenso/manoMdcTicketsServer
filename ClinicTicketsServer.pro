@@ -6,37 +6,6 @@
 
 QT += core sql network
 
-CONFIG(gui_mode) {
-message(GUI mode)
-QT += gui svg
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-SOURCES += \
-    gui/dlgdbconnection.cpp \
-    gui/mainwindow.cpp \
-    gui/dlgusers.cpp \
-    gui/dlgusereditor.cpp
-
-HEADERS  +=  \
-    gui/dlgdbconnection.h \
-    gui/mainwindow.h \
-    gui/dlgusers.h \
-    gui/dlgusereditor.h \
-
-win32:RC_ICONS += icon.ico
-
-RESOURCES += \
-    icons.qrc
-
-FORMS += \
-    gui/dlgdbconnection.ui \
-    gui/mainwindow.ui \
-    gui/dlgusers.ui \
-    gui/dlgusereditor.ui
-} else {
-QT -= gui
-}
-
 TARGET = ClinicTicketsServer
 TEMPLATE = app
 

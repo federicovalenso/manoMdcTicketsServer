@@ -79,22 +79,3 @@ QString ServerSettings::getServerAddr() const {
 int ServerSettings::getPort() const {
   return settings_.value(kConnectionGroup + "/" + kPort, 3306).toInt();
 }
-
-#ifdef QT_GUI_LIB
-void AppSettings::setSizeSettings(const QByteArray& mainWindowGeometry,
-                                  const QByteArray& mainWindowState) {
-  settings_.beginGroup(SIZE_GROUP);
-  settings_.setValue(MAIN_WINDOW_GEOMETRY, mainWindowGeometry);
-  settings_.setValue(MAIN_WINDOW_STATE, mainWindowState);
-  settings_.endGroup();
-  settings_.sync();
-}
-
-QByteArray AppSettings::getMainWindowState() const {
-  return settings_.value(SIZE_GROUP + "/" + MAIN_WINDOW_STATE).toByteArray();
-}
-
-QByteArray AppSettings::getMainWindowGeometry() const {
-  return settings_.value(SIZE_GROUP + "/" + MAIN_WINDOW_GEOMETRY).toByteArray();
-}
-#endif

@@ -12,7 +12,7 @@ class Database {
   static const QString DB_TYPE;
 
   Database(const QString& owner);
-  ~Database();
+  ~Database() = default;
 
   bool startTransaction() noexcept;
   bool commitTransaction() noexcept;
