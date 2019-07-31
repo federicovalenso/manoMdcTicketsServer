@@ -31,7 +31,7 @@ server_addr=mariadb\n\
 user_name=root\n\
 password=D@kthf90\n\
 [templates]\n\
-path=templates\n\
+path=/var/www/templates\n\
 suffix=.tpl\n\
 encoding=UTF-8\n\
 cacheSize=1000000\n\
@@ -55,7 +55,8 @@ bufferSize=100\n\
 maxSize=1000000\n\
 maxBackups=2\n\
 timestampFormat=dd.MM.yyyy hh:mm:ss.zzz\n\
-msgFormat={timestamp} {typeNr} {type} {thread} {msg}' > /etc/config.ini
+msgFormat={timestamp} {typeNr} {type} {thread} {msg}' > /etc/config.ini && \
+cp -R src/etc/templates /var/www/templates
 
 ENV TZ=Asia/Irkutsk
 RUN apt-get install tzdata -y && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
