@@ -24,16 +24,17 @@ class Router {
   Router();
   Router(const Router&) = delete;
   Router& operator=(const Router&) = delete;
-  const QString USER_CONTROLLER = "UserController";
-  const QString TICKET_CONTROLLER = "TicketController";
-  const QString API_TICKET_CONTROLLER = "ApiTicketController";
-  const QString INDEX_ACTION = "index";
-  const QString STORE_ACTION = "store";
-  const QString CREATE_ACTION = "create";
-  const QString DESTROY_ACTION = "destroy";
-  const QString UPDATE_ACTION = "update";
-  const QString SHOW_ACTION = "show";
-  const QString EDIT_ACTION = "edit";
+  const QString kUserController = "UserController";
+  const QString kTicketController = "TicketController";
+  const QString kApiTicketController = "ApiTicketController";
+  const QString kTicketCounterController = "TicketCounterController";
+  const QString kIndexAction = "index";
+  const QString kStoreAction = "store";
+  const QString kCreateAction = "create";
+  const QString kDestroyAction = "destroy";
+  const QString kUpdateAction = "update";
+  const QString kShowAction = "show";
+  const QString kEditAction = "edit";
 
   QHash<RouteKey, Route> routes_;
   QHash<ControllerName, ControllerFactoryMethod> controllers_;

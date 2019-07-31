@@ -13,6 +13,7 @@
 #include "models/usermodel.h"
 #include "requestmapper.h"
 #include "ticketcontroller.h"
+#include "ticketcounter.h"
 #include "usercontroller.h"
 
 using namespace std;
@@ -34,7 +35,7 @@ QVariant getLoggedInUserId(HttpRequest &request, HttpResponse &response) {
 
 void TicketController::index(HttpRequest &request, HttpResponse &response) {
   response.setHeader("Content-Type", "application/json");
-  if (validateIndexRequest(request) == true) {
+  if (validateIndexRequest(request)) {
     auto parameters = request.getParameterMap();
     QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
     QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
@@ -53,7 +54,7 @@ void TicketController::index(HttpRequest &request, HttpResponse &response) {
       jsonArr.append(jsonObject);
     }
     QJsonDocument jsonDoc(jsonArr);
-    response.write(jsonDoc.toJson(QJsonDocument::JsonFormat::Compact));
+    response.write(jsonDoc.toJson(QJsonDocument::JsonFormat::Compact), true);
   } else {
     setClientError(response);
   }
@@ -78,7 +79,8 @@ void TicketController::store(HttpRequest &request, HttpResponse &response) {
       jsonObject.insert(ACTION_PARAM, QString(action));
       jsonObject.insert(TicketModel::IS_VOICED_COL, ticket->is_voiced);
       QJsonDocument doc(jsonObject);
-      response.write(doc.toJson());
+      response.write(doc.toJson(), true);
+      ++TicketCounter::getInstance();
     } else {
       setServerError(response);
     }
@@ -103,9 +105,9 @@ void TicketController::show(HttpRequest &request, HttpResponse &response) {
         ticketAction->prefix + QString::number(ticket->number_by_action));
     jsonObject.insert(WINDOW_NUMBER, ticket->window_number);
     QJsonDocument doc(jsonObject);
-    response.write(doc.toJson());
+    response.write(doc.toJson(), true);
   } else {
-    response.write(QJsonDocument(QJsonObject()).toJson());
+    response.write(QJsonDocument(QJsonObject()).toJson(), true);
   }
 }
 
@@ -133,11 +135,10 @@ void TicketController::update(HttpRequest &request, HttpResponse &response) {
   TicketModel ticketModel;
   TableOptions options;
   options.insert(TicketModel::USER_ID_COL, user_id.toInt());
-  for (auto it = params.cbegin(); it != params.cend(); it++) {
+  for (auto it = params.cbegin(); it != params.cend(); ++it) {
     options.insert(it.key(), it.value());
   }
-  auto ticket = ticketModel.updateTicket(options);
-  if (ticket) {
+  if (ticketModel.updateTicket(options)) {
     response.setStatus(200);
   } else {
     setClientError(response);

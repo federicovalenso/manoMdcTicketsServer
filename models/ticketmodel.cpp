@@ -1,5 +1,4 @@
 #include "ticketmodel.h"
-#include <QDebug>
 #include <QSqlError>
 #include <QSqlField>
 #include <QSqlQuery>
@@ -9,6 +8,9 @@
 #include <stdexcept>
 #include "entities/ticketaction.h"
 #include "usermodel.h"
+#ifdef QT_DEBUG
+#include <QDebug>
+#endif
 
 using namespace std;
 
@@ -58,14 +60,14 @@ TicketModel::~TicketModel() {
 optional<Ticket> TicketModel::save(const TableOptions &options) noexcept {
   QSqlRecord record;
   for (auto it = options.cbegin(); it != options.cend(); it++) {
-    if (columns_.contains(it.key()) == false) {
+    if (!columns_.contains(it.key())) {
       return nullopt;
     }
     QSqlField field(it.key());
     field.setValue(it.value());
     record.append(move(field));
   }
-  if (model_->insertRecord(-1, record) == true) {
+  if (model_->insertRecord(-1, record)) {
     return extractFromRecord(model_->record(model_->rowCount() - 1));
   }
   return nullopt;
@@ -88,7 +90,7 @@ QVector<Ticket> TicketModel::getAvailableTickets(bool on_service,
                        .arg(CREATED_AT_COL)
                        .arg(ON_SERVICE_COL)
                        .arg(fromBool(on_service));
-  if (is_manual != true) {
+  if (!is_manual) {
     filter.append(QString(" AND %1 = 0").arg(IS_MANUAL_COL));
   }
   model_->setFilter(filter);
@@ -118,24 +120,26 @@ optional<Ticket> TicketModel::getOldestNonVoicedTicket() noexcept {
 
 optional<Ticket> TicketModel::updateTicket(
     const TableOptions &options) noexcept {
-  if (validateOptions(options) == true) {
+  if (validateOptions(options)) {
     QString filter = QString("%1.%2='%3'")
                          .arg(TABLE_NAME)
                          .arg(ID_COL)
                          .arg(options.value(ID_COL).toString());
     model_->setFilter(filter);
     model_->select();
+#ifdef QT_DEBUG
     qDebug() << model_->query().lastError();
     qDebug() << model_->query().lastQuery();
+#endif
     if (model_->rowCount() == 1) {
       QSqlRecord record;
       for (auto it = options.cbegin(); it != options.cend(); it++) {
         QSqlField field(it.key());
         field.setValue(it.value());
-        record.append(std::move(field));
+        record.append(field);
       }
-      model_->setRecord(0, std::move(record));
-      if (model_->submit() == true) {
+      model_->setRecord(0, record);
+      if (model_->submit()) {
         return extractFromRecord(model_->record(0));
       }
     }
@@ -147,15 +151,13 @@ bool TicketModel::validateOptions(const TableOptions &options) const {
   bool result = false;
   if (options.size() > 0) {
     size_t errors = 0;
-    for (auto it = options.cbegin(); it != options.cend(); it++) {
-      if (columns_.contains(it.key()) == false) {
-        errors++;
+    for (auto it = options.cbegin(); it != options.cend(); ++it) {
+      if (!columns_.contains(it.key())) {
+        ++errors;
         break;
       }
     }
-    if (errors == 0) {
-      result = true;
-    }
+    if (errors == 0) result = true;
   }
   return result;
 }

@@ -13,6 +13,7 @@ QMAKE_CXXFLAGS_RELEASE += -O2
 CONFIG += c++1z
 
 SOURCES += main.cpp\
+    controllers/ticketcountercontroller.cpp \
     requestmapper.cpp \
     controllers/modelcontroller.cpp \
     routing/route.cpp \
@@ -36,6 +37,7 @@ SOURCES += main.cpp\
     databasemigrator.cpp
 
 HEADERS  += requestmapper.h \
+    controllers/ticketcountercontroller.h \
     database.h \
     controllers/modelcontroller.h \
     routing/route.h \
@@ -52,6 +54,7 @@ HEADERS  += requestmapper.h \
     entities/entity.h \
     entities/user.h \
     controllers/API/apiticketcontroller.h \
+    ticketcounter.h \
     validators/rules/validationrule.h \
     validators/rules/idrule.h \
     validators/rules/ifrule.h \

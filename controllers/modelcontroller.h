@@ -1,14 +1,10 @@
 #ifndef MODELCONTROLLER_H
 #define MODELCONTROLLER_H
 
-#include <QDebug>
-#include <QObject>
-#include <QString>
-
 #include "httprequesthandler.h"
 #include "httpsessionstore.h"
 
-class ModelController : public QObject {
+class ModelController {
  public:
   ModelController() = default;
   virtual ~ModelController() = default;
