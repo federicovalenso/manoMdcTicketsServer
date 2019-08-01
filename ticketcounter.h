@@ -1,10 +1,13 @@
 #ifndef TICKETCOUNTER_H
 #define TICKETCOUNTER_H
 
+#include <QDateTime>
 #include <atomic>
 
 class TicketCounter {
   std::atomic<uint16_t> counter_ = 0;
+  uint16_t prev_count_ = 0;
+  QDateTime last_clear_time_ = QDateTime::currentDateTime();
 
  public:
   static TicketCounter& getInstance() {
@@ -22,8 +25,16 @@ class TicketCounter {
     ++counter_;
     return *this;
   }
-  inline void clear() { counter_ = 0; }
+  inline void clear() {
+    prev_count_ = counter_;
+    counter_ = 0;
+    last_clear_time_ = QDateTime::currentDateTime();
+  }
   inline uint16_t value() const { return counter_; }
+  inline uint16_t prev_value() const { return prev_count_; }
+  inline QString last_clear_time() const {
+    return last_clear_time_.toString("HH:mm dd-MMMM-yyyy");
+  }
 };
 
 #endif  // TICKETCOUNTER_H
