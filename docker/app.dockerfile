@@ -56,7 +56,8 @@ maxSize=1000000\n\
 maxBackups=2\n\
 timestampFormat=dd.MM.yyyy hh:mm:ss.zzz\n\
 msgFormat={timestamp} {typeNr} {type} {thread} {msg}' > /etc/config.ini && \
-cp -R src/etc/templates /var/www/templates
+mkdir -p /var/www/templates && \
+cp -R src/etc/templates /var/www/
 
 ENV TZ=Asia/Irkutsk
 RUN apt-get install tzdata -y && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
