@@ -1,3 +1,5 @@
 *.pro.*
 *.autosave
-/logs
+build*
+logs/
+libs/
