@@ -1,0 +1,7 @@
+#include "validators/rules/boolrule.h"
+#include "validators/rules/emptyvaluerule.h"
+#include "validators/rules/idrule.h"
+#include "validators/rules/ifrule.h"
+#include "validators/rules/intrule.h"
+#include "validators/rules/validationrule.h"
+#include "validators/rules/windowrule.h"
