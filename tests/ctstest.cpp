@@ -289,7 +289,7 @@ void CtsTest::TestParallelAndIncorrectUpdate() {
 
 void CtsTest::TestStatistics() {
   QString address =
-      QString("http://%1:%2/statistics/count").arg(kLocalHost).arg(port_);
+      QString("http://%1:%2/api/statistics/count").arg(kLocalHost).arg(port_);
   QUrl url(address);
   QNetworkRequest request(url);
   {
