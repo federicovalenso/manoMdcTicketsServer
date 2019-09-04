@@ -9,7 +9,7 @@ webpack_commands = cd
 win32 {
   webpack_commands += /d
 }
-webpack_commands += $$ASSETSDIR && npm run
+webpack_commands += $$ASSETSDIR && npm install && npm run
 debug {
   webpack_commands += dev
 } else {

@@ -1,3 +1,10 @@
-node_modules/
+node_modules
+/
 ssl/
+
 0.js
+
+docroot/js
+docroot/css
+docroot/mix-manifest.json
+
