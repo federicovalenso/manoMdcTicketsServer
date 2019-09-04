@@ -306,3 +306,10 @@ void CtsTest::TestStatistics() {
                nullptr, nullptr);
   }
 }
+
+void CtsTest::cleanupTestCase() {
+  auto connection_names = QSqlDatabase::connectionNames();
+  for (const auto& conection_name : connection_names) {
+    QSqlDatabase::removeDatabase(conection_name);
+  }
+}
