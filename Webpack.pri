@@ -1,8 +1,11 @@
-win32 {
-  ETCDIR = $$OUT_PWD/etc
-} else {
-  ETCDIR = /etc
+unix {
+  DESTDIR = /usr/bin/cts
 }
+win32 {
+  DESTDIR = $$OUT_PWD/bin
+}
+
+ETCDIR = $$DESTDIR/etc
 
 ASSETSDIR = $$_PRO_FILE_PWD_/src/etc
 webpack_commands = cd
