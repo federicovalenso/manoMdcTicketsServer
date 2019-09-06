@@ -20,7 +20,6 @@ class CtsTest : public QObject {
   void TestSimplePost();
   void TestParallelAndIncorrectUpdate();
   void TestStatistics();
-  void cleanupTestCase();
 
  private:
   const QString kLocalHost = "localhost";

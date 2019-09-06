@@ -72,6 +72,14 @@ CtsTest::CtsTest(QObject* parent) : QObject(parent) {
   new HttpListener(listenerSettings, new RequestMapper(app), app);
   new TicketCounter(app);
   port_ = listenerSettings->value("port").toInt();
+
+  qAddPostRoutine([]() {
+    auto connection_names = QSqlDatabase::connectionNames();
+    for (const auto& connection_name : connection_names) {
+      qDebug() << "Removing connection: " << connection_name;
+      QSqlDatabase::removeDatabase(connection_name);
+    }
+  });
 }
 
 void CtsTest::init() { QCoreApplication::processEvents(); }
@@ -304,12 +312,5 @@ void CtsTest::TestStatistics() {
     loop.exec();
     disconnect(network_access_manager_, &QNetworkAccessManager::finished,
                nullptr, nullptr);
-  }
-}
-
-void CtsTest::cleanupTestCase() {
-  auto connection_names = QSqlDatabase::connectionNames();
-  for (const auto& conection_name : connection_names) {
-    QSqlDatabase::removeDatabase(conection_name);
   }
 }
