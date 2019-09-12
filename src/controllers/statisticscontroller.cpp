@@ -1,4 +1,5 @@
 #include "statisticscontroller.h"
+#include <QJsonArray>
 #include "modelcontroller.h"
 #include "models/statisticsmodel.h"
 #include "requestmapper.h"
@@ -23,6 +24,17 @@ void StatisticsController::ticketsCount(
     ModelController::setClientError(response);
     return;
   }
-  response.write(StatisticsModel().getCountsByInterval(from, to).toJson(
-      QJsonDocument::JsonFormat::Compact));
+  auto counts_by_hour = StatisticsModel().getCountsByInterval(from, to);
+  QJsonArray labels;
+  QJsonArray data;
+  for (const auto &count_by_hour : counts_by_hour) {
+    labels.push_back(count_by_hour.created_hour);
+    data.push_back(count_by_hour.count);
+  }
+  QJsonArray datasets;
+  datasets.push_back(QJsonObject{{"data", data},
+                                 {"label", QObject::tr("Количество талонов")},
+                                 {"backgroundColor", "#f87979"}});
+  QJsonDocument doc{QJsonObject{{"labels", labels}, {"datasets", datasets}}};
+  response.write(doc.toJson(QJsonDocument::JsonFormat::Compact));
 }

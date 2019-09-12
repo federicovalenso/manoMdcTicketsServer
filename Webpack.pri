@@ -1,11 +1,11 @@
 unix {
-  DESTDIR = /usr/bin/cts
+  DESTDIR = /usr/bin/
+  ETCDIR = /var/www
 }
 win32 {
   DESTDIR = $$OUT_PWD/bin
+  ETCDIR = $$DESTDIR/etc
 }
-
-ETCDIR = $$DESTDIR/etc
 
 ASSETSDIR = $$_PRO_FILE_PWD_/src/etc
 webpack_commands = cd

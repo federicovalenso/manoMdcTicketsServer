@@ -6,9 +6,17 @@
 #include <QSqlQueryModel>
 #include "database.h"
 
+struct CountByHour {
+  QString created_hour;
+  QString count;
+
+  CountByHour(QString&& created_hour, QString&& count);
+};
+
 class StatisticsModel {
  public:
-  QJsonDocument getCountsByInterval(const QDate& from, const QDate& to);
+  std::vector<CountByHour> getCountsByInterval(const QDate& from,
+                                               const QDate& to);
 
  private:
   static const QString kCountsByIntervalTemplate;
