@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="content-style-type" content="text/css">
 
-	<link rel="icon" href="img/logo.png" type="image/x-icon">
+	<link rel="icon" href="/img/logo.png" type="image/x-icon">
   <link href="/css/app.css" rel="stylesheet">
 </head>
 
@@ -15,26 +15,23 @@
 
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
 		<div class="container">
-      <a class="navbar-brand" href="/"><img class="logo" src="img/logo.svg"></a>
+      <a class="navbar-brand" href="/"><img class="logo" src="/img/logo.svg"></a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
 				aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
-			<div class="collapse navbar-collapse" id="navbarSupportedContent">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item">
-						<a class="nav-link" href="/statistics/count">По талонам за период</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="/statistics/registrar">По регистраторам</a>
-					</li>
-				</ul>
-			</div>
 	</nav>
 
 	<div class="container">
 		<main id="app">
-			<chart-component></chart-component>
+			<b-card no-body>
+				<b-tabs card>
+					<b-tab title="По талонам за период" active>
+						<tickets-chart></tickets-chart>
+					</b-tab>
+					<b-tab title="По регистраторам"><p>В процессе...</p></b-tab>
+				</b-tabs>
+			</b-card>
 		</main>
 	</div>
 

@@ -24,33 +24,16 @@ export default {
   data: () => ({
     loaded: false,
     chartdata: null,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        xAxes: [{
-          scaleLabel : {
-              display: true,
-              labelString: "Часы"
-            }
-        }
-        ],
-        yAxes: [
-          {
-            scaleLabel : {
-              display: true,
-              labelString: "Талоны"
-            },
-            ticks: {
-              suggestedMin: 0
-            }
-          }
-        ]
-      }
-    },
     dateFrom: null,
     dateTo: null
   }),
+  props: {
+    options: {
+      type: Object,
+      default: null
+    },
+    apiRoute: String
+  },
   async mounted() {
     this.dateFrom = this.currentDate();
     this.dateTo = this.dateFrom;
@@ -71,7 +54,7 @@ export default {
         this.dateFrom = this.dateTo;
       }
       axios
-        .get("/api/statistics/count", {
+        .get(this.apiRoute, {
           params: { from: this.dateFrom, to: this.dateTo }
         })
         .then(response => {

@@ -1,6 +1,8 @@
 import './bootstrap';
+import { TabsPlugin } from 'bootstrap-vue';
 window.Vue = require('vue');
-Vue.component('chart-component', require('./components/ChartContainer.vue')["default"]);
+Vue.component('tickets-chart', require('./components/TicketsChart.vue')["default"]);
+Vue.use(TabsPlugin);
 var app = new Vue({
   el: '#app'
 });

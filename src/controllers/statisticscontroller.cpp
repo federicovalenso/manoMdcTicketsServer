@@ -36,5 +36,6 @@ void StatisticsController::ticketsCount(
                                  {"label", QObject::tr("Количество талонов")},
                                  {"backgroundColor", "#f87979"}});
   QJsonDocument doc{QJsonObject{{"labels", labels}, {"datasets", datasets}}};
+
   response.write(doc.toJson(QJsonDocument::JsonFormat::Compact));
 }
