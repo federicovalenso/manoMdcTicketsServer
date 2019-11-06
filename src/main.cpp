@@ -1,3 +1,7 @@
+#if defined(unix) || defined(__unix__) || defined(__unix)
+#define PREDEF_PLATFORM_UNIX
+#endif
+
 #include <QCoreApplication>
 #include <QStringList>
 
@@ -14,6 +18,30 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef PREDEF_PLATFORM_UNIX
+#include <signal.h>
+#include <unistd.h>
+#include <initializer_list>
+
+void catchUnixSignals(std::initializer_list<int> quitSignals) {
+  auto handler = [](int sig) -> void {
+    qWarning("Application is closing by system signal...");
+    QCoreApplication::quit();
+  };
+
+  sigset_t blocking_mask;
+  sigemptyset(&blocking_mask);
+  for (auto sig : quitSignals) sigaddset(&blocking_mask, sig);
+
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sa.sa_mask = blocking_mask;
+  sa.sa_flags = 0;
+
+  for (auto sig : quitSignals) sigaction(sig, &sa, nullptr);
+}
+#endif
+
 using namespace stefanfrings;
 
 int main(int argc, char* argv[]) {
@@ -25,6 +53,9 @@ int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
   app.setOrganizationName("MANO \'MDC\'");
   app.setApplicationName("Mano \'MDC\' Server App");
+#ifdef PREDEF_PLATFORM_UNIX
+  catchUnixSignals({SIGQUIT, SIGINT, SIGTERM, SIGHUP});
+#endif
   Settings::InitSettings();
 
   try {
