@@ -11,9 +11,9 @@
 
 class TicketActionModel : public Model {
  public:
-  static const QString TABLE_NAME;
-  static const QString NAME_COL;
-  static const QString PREFIX_COL;
+  static const QString kTableName;
+  static const QString kNameCol;
+  static const QString kPrefixCol;
 
   TicketActionModel();
   ~TicketActionModel() = default;

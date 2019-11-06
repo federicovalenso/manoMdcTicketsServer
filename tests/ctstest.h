@@ -9,7 +9,7 @@
 class CtsTest : public QObject {
   Q_OBJECT
  public:
-  explicit CtsTest(QObject *app = nullptr);
+  explicit CtsTest(QObject* app = nullptr);
 
  signals:
   void TestsFinished();
@@ -17,14 +17,16 @@ class CtsTest : public QObject {
  private slots:
   void init();
   void TestAuthorization();
-  void TestSimplePost();
-  void TestParallelAndIncorrectUpdate();
+  void TestTicketAdd();
+  void TestTicketUpdate();
   void TestStatistics();
 
  private:
   const QString kLocalHost = "localhost";
   int port_;
-  QNetworkAccessManager *network_access_manager_;
+  QNetworkAccessManager* network_access_manager_;
+  void processRequest(std::function<void(QNetworkReply* reply)>&& func,
+                      QEventLoop& loop);
 };
 
 #endif  // CTSTEST_H

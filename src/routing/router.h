@@ -6,7 +6,6 @@
 #include <QSet>
 #include <functional>
 #include <memory>
-#include "controllers/API/apiticketcontroller.h"
 #include "controllers/statisticscontroller.h"
 #include "controllers/ticketcontroller.h"
 #include "controllers/ticketcountercontroller.h"
@@ -35,7 +34,6 @@ class Router {
 
   const ControllerName kUserController = "User";
   const ControllerName kTicketController = "Ticket";
-  const ControllerName kApiTicketController = "ApiTicket";
   const ControllerName kTicketCounterController = "TicketCounter";
   const ControllerName kStatisticsController = "Statistics";
   const ActionName kIndex = "index";
@@ -49,17 +47,19 @@ class Router {
   const HttpMethod kPost = "POST";
   const HttpMethod kPut = "PUT";
   const Path kLogin = "/login";
-  const Path kTickets = "/tickets";
-  const Path kFreeTickets = "/tickets/free";
-  const Path kApiTickets = "/api/tickets";
+  const Path kTickets = "/api/tickets";
+  const Path kFreeTickets = "/api/tickets/free";
+  const Path kVoiceTicket = "/api/ticket/voice";
+  const Path kTakeTicket = "/api/ticket/take";
+  const Path kReturnTicket = "/api/ticket/return";
+  const Path kFinishTicket = "/api/ticket/finish";
   const Path kCounter = "/counter";
   const Path kStatistics = "/statistics";
-  const Path kApiStatisticsCount = "/api/statistics/count";
+  const Path kStatisticsCount = "/api/statistics/count";
 
   const QHash<ControllerName, ControllerPtr> kControllers = {
       {kUserController, std::make_shared<UserController>()},
       {kTicketController, std::make_shared<TicketController>()},
-      {kApiTicketController, std::make_shared<ApiTicketController>()},
       {kTicketCounterController, std::make_shared<TicketCounterController>()},
       {kStatisticsController, std::make_shared<StatisticsController>()}};
   const QHash<ActionName, Action> kActions{
@@ -72,10 +72,9 @@ class Router {
       {kEdit, std::mem_fn(&ModelController::edit)}};
 
   using BaseControllerFuncPtr = void (ModelController::*)(
-      stefanfrings::HttpRequest& request, stefanfrings::HttpResponse& response);
-  using BaseControllerConstFuncPtr =
-      void (ModelController::*)(stefanfrings::HttpRequest& request,
-                                stefanfrings::HttpResponse& response) const;
+      stefanfrings::HttpRequest&, stefanfrings::HttpResponse&);
+  using BaseControllerConstFuncPtr = void (ModelController::*)(
+      stefanfrings::HttpRequest&, stefanfrings::HttpResponse&) const;
 
   const QHash<RouteKey, Route> kRoutes = {
       {RouteKey(kLogin, kPost),
@@ -84,13 +83,24 @@ class Router {
        Route(kControllers.value(kTicketController), kActions.value(kIndex))},
       {RouteKey(kTickets, kPost),
        Route(kControllers.value(kTicketController), kActions.value(kStore))},
-      {RouteKey(kTickets, kPut),
-       Route(kControllers.value(kTicketController), kActions.value(kUpdate))},
       {RouteKey(kFreeTickets, kGet),
        Route(kControllers.value(kTicketController), kActions.value(kShow))},
-      {RouteKey(kApiTickets, kPut),
-       Route(kControllers.value(kApiTicketController),
-             kActions.value(kUpdate))},
+      {RouteKey(kVoiceTicket, kPut),
+       Route(kControllers.value(kTicketController),
+             static_cast<BaseControllerConstFuncPtr>(
+                 &TicketController::voiceTicket))},
+      {RouteKey(kTakeTicket, kPut),
+       Route(kControllers.value(kTicketController),
+             static_cast<BaseControllerConstFuncPtr>(
+                 &TicketController::takeTicket))},
+      {RouteKey(kReturnTicket, kPut),
+       Route(kControllers.value(kTicketController),
+             static_cast<BaseControllerConstFuncPtr>(
+                 &TicketController::returnTicket))},
+      {RouteKey(kFinishTicket, kPut),
+       Route(kControllers.value(kTicketController),
+             static_cast<BaseControllerConstFuncPtr>(
+                 &TicketController::finishTicket))},
       {RouteKey(kCounter, kGet),
        Route(kControllers.value(kTicketCounterController),
              kActions.value(kIndex))},
@@ -100,10 +110,11 @@ class Router {
       {RouteKey(kStatistics, kGet),
        Route(kControllers.value(kStatisticsController),
              kActions.value(kIndex))},
-      {RouteKey(kApiStatisticsCount, kGet),
+      {RouteKey(kStatisticsCount, kGet),
        Route(kControllers.value(kStatisticsController),
              static_cast<BaseControllerConstFuncPtr>(
-                 &StatisticsController::ticketsCount))}};
+                 &StatisticsController::ticketsCount))},
+  };
 };
 
 #endif  // ROUTER_H

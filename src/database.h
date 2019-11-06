@@ -8,8 +8,9 @@
 
 namespace Database {
 QString initConnection(const QString& owner);
+void closeConnection(const QString& name);
 QString dateToStringFilter(const QDate& date);
-QJsonObject sqlRecordToJsonObject(QSqlRecord&& record);
+QJsonObject sqlRecordToJsonObject(const QSqlRecord& record);
 };  // namespace Database
 
 #endif  // DBHELPER_H

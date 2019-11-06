@@ -15,45 +15,50 @@
 
 using namespace std;
 
-const QString TicketModel::TABLE_NAME = "tickets";
-const QString TicketModel::NUMBER_BY_ACTION_COL = "number_by_action";
-const QString TicketModel::TICKET_ID_COL = TABLE_NAME + ".id";
-const QString TicketModel::ACTION_ID_COL = "action_id";
-const QString TicketModel::USER_ID_COL = "user_id";
-const QString TicketModel::ON_SERVICE_COL = "on_service";
-const QString TicketModel::IS_MANUAL_COL = "is_manual";
-const QString TicketModel::IS_DONE_COL = "is_done";
-const QString TicketModel::IS_VOICED_COL = "is_voiced";
-const QString TicketModel::WINDOW_NUMBER_COL = "window";
-const QByteArray TicketModel::ON_SERVICE_PARAM = ON_SERVICE_COL.toUtf8();
-const QByteArray TicketModel::IS_MANUAL_PARAM = IS_MANUAL_COL.toUtf8();
-const QByteArray TicketModel::IS_DONE_PARAM = IS_DONE_COL.toUtf8();
-const QByteArray TicketModel::IS_VOICED_PARAM = IS_VOICED_COL.toUtf8();
-const QByteArray TicketModel::WINDOW_NUMBER_PARAM = WINDOW_NUMBER_COL.toUtf8();
+const QString TicketModel::kTableName = "tickets";
+const QString TicketModel::kNumberByActionCol = "number_by_action";
+const QString TicketModel::kTicketIdCol = TicketModel::kTableName + ".id";
+const QString TicketModel::kActionIdCol = "action_id";
+const QString TicketModel::kUserIdCol = "user_id";
+const QString TicketModel::kOnServiceCol = "on_service";
+const QString TicketModel::kIsManualCol = "is_manual";
+const QString TicketModel::kIsDoneCol = "is_done";
+const QString TicketModel::kIsVoicedCol = "is_voiced";
+const QString TicketModel::kWindowNumberCol = "window";
+const QString TicketModel::kTicketNumber = "ticket_number";
+const QByteArray TicketModel::kOnServiceParam =
+    TicketModel::kOnServiceCol.toUtf8();
+const QByteArray TicketModel::kIsManualParam =
+    TicketModel::kIsManualCol.toUtf8();
+const QByteArray TicketModel::kIsDoneParam = TicketModel::kIsDoneCol.toUtf8();
+const QByteArray TicketModel::kIsVoicedParam =
+    TicketModel::kIsVoicedCol.toUtf8();
+const QByteArray TicketModel::kWindowNumberParam =
+    TicketModel::kWindowNumberCol.toUtf8();
 
 QString fromBool(bool value) { return value == true ? "1" : "0"; }
 
 TicketModel::TicketModel() : Model("TicketModel") {
-  columns_.insert(NUMBER_BY_ACTION_COL);
-  columns_.insert(ACTION_ID_COL);
-  columns_.insert(USER_ID_COL);
-  columns_.insert(ON_SERVICE_COL);
-  columns_.insert(IS_DONE_COL);
-  columns_.insert(IS_VOICED_COL);
-  columns_.insert(IS_MANUAL_COL);
-  columns_.insert(WINDOW_NUMBER_COL);
-  columns_.insert(TicketActionModel::NAME_COL);
+  columns_.insert(kNumberByActionCol);
+  columns_.insert(kActionIdCol);
+  columns_.insert(kUserIdCol);
+  columns_.insert(kOnServiceCol);
+  columns_.insert(kIsDoneCol);
+  columns_.insert(kIsVoicedCol);
+  columns_.insert(kIsManualCol);
+  columns_.insert(kWindowNumberCol);
+  columns_.insert(TicketActionModel::kNameCol);
   model_ = std::make_unique<QSqlRelationalTableModel>(
       nullptr, QSqlDatabase::database(kConnectionName));
-  model_->setTable(TABLE_NAME);
+  model_->setTable(kTableName);
   model_->setRelation(
-      ACTION_ID_COL_NUMBER,
-      QSqlRelation(TicketActionModel::TABLE_NAME, TicketActionModel::ID_COL,
-                   TicketActionModel::NAME_COL));
+      kActionIdColNumber,
+      QSqlRelation(TicketActionModel::kTableName, TicketActionModel::kIdCol,
+                   TicketActionModel::kNameCol));
   model_->setEditStrategy(QSqlTableModel::EditStrategy::OnRowChange);
 }
 
-optional<Ticket> TicketModel::save(const TableOptions &options) noexcept {
+optional<QJsonObject> TicketModel::save(const TableOptions &options) noexcept {
   QSqlRecord record;
   for (auto it = options.cbegin(); it != options.cend(); it++) {
     if (!columns_.contains(it.key())) {
@@ -64,13 +69,14 @@ optional<Ticket> TicketModel::save(const TableOptions &options) noexcept {
     record.append(field);
   }
   if (model_->insertRecord(-1, record)) {
-    return extractFromRecord(model_->record(model_->rowCount() - 1));
+    return extractFromRecord(model_->record(model_->rowCount() - 1),
+                             ExtractionModes::INSERT);
   }
   return nullopt;
 }
 
-QVector<Ticket> TicketModel::getAll() noexcept {
-  QVector<Ticket> result;
+QVector<QJsonObject> TicketModel::getAll() noexcept {
+  QVector<QJsonObject> result;
   model_->setFilter("");
   model_->select();
   for (int i = 0; i < model_->rowCount(); i++) {
@@ -79,15 +85,15 @@ QVector<Ticket> TicketModel::getAll() noexcept {
   return result;
 }
 
-QVector<Ticket> TicketModel::getAvailableTickets(bool on_service,
-                                                 bool is_manual) noexcept {
-  QVector<Ticket> result;
+QVector<QJsonObject> TicketModel::getAvailableTickets(bool on_service,
+                                                      bool is_manual) noexcept {
+  QVector<QJsonObject> result;
   QString filter = QString("DATE(%1) = CURDATE() AND %2 = %3")
-                       .arg(CREATED_AT_COL)
-                       .arg(ON_SERVICE_COL)
+                       .arg(kCreatedAtCol)
+                       .arg(kOnServiceCol)
                        .arg(fromBool(on_service));
   if (!is_manual) {
-    filter.append(QString(" AND %1 = 0").arg(IS_MANUAL_COL));
+    filter.append(QString(" AND %1 = 0").arg(kIsManualCol));
   }
   model_->setFilter(filter);
   model_->select();
@@ -97,42 +103,38 @@ QVector<Ticket> TicketModel::getAvailableTickets(bool on_service,
   return result;
 }
 
-optional<Ticket> TicketModel::getOldestNonVoicedTicket() noexcept {
+optional<QJsonObject> TicketModel::getOldestNonVoicedTicket() noexcept {
   return getByFilter(QString("DATE(%1) = CURDATE() AND %2='0' AND %3='1'")
-                         .arg(CREATED_AT_COL)
-                         .arg(IS_VOICED_COL)
-                         .arg(ON_SERVICE_COL));
+                         .arg(kCreatedAtCol)
+                         .arg(kIsVoicedCol)
+                         .arg(kOnServiceCol));
 }
 
-std::optional<Ticket> TicketModel::getById(int id) noexcept {
-  return getByFilter(QString("%1=%2").arg(TICKET_ID_COL).arg(id));
+std::optional<QJsonObject> TicketModel::getById(int id) noexcept {
+  return getByFilter(QString("%1=%2").arg(kTicketIdCol).arg(id));
 }
 
-std::optional<Ticket> TicketModel::getByFilter(QString filter) noexcept {
-  model_->setSort(CREATED_AT_COL_NUMBER, Qt::SortOrder::AscendingOrder);
+std::optional<QJsonObject> TicketModel::getByFilter(QString filter) noexcept {
+  model_->setSort(kCreatedAtColNumber, Qt::SortOrder::AscendingOrder);
   model_->setFilter(filter);
   model_->select();
   Ticket result;
   int rowCount = model_->rowCount();
   if (rowCount > 0) {
     return extractFromRecord(model_->record(0));
-  };
+  }
   return nullopt;
 }
 
-optional<Ticket> TicketModel::updateTicket(
+optional<QJsonObject> TicketModel::updateTicket(
     const TableOptions &options) noexcept {
   if (validateOptions(options)) {
     QString filter = QString("%1.%2='%3'")
-                         .arg(TABLE_NAME)
-                         .arg(ID_COL)
-                         .arg(options.value(ID_COL).toString());
+                         .arg(kTableName)
+                         .arg(kIdCol)
+                         .arg(options.value(kIdCol).toString());
     model_->setFilter(filter);
     model_->select();
-#ifdef QT_DEBUG
-    qDebug() << model_->query().lastError();
-    qDebug() << model_->query().lastQuery();
-#endif
     if (model_->rowCount() == 1) {
       QSqlRecord record;
       for (auto it = options.cbegin(); it != options.cend(); it++) {
@@ -164,20 +166,33 @@ bool TicketModel::validateOptions(const TableOptions &options) const {
   return result;
 }
 
-Ticket TicketModel::extractFromRecord(const QSqlRecord &record) const {
-  Ticket ticket;
-  ticket.id = record.field(ID_COL).value().toInt();
-  ticket.number_by_action = record.field(NUMBER_BY_ACTION_COL).value().toInt();
-  ticket.action = record.field(TicketActionModel::NAME_COL).value().toString();
-  ticket.user_id = record.field(USER_ID_COL).value().toInt();
-  ticket.created_at =
-      record.field(CREATED_AT_COL).value().toDateTime().toSecsSinceEpoch();
-  ticket.updated_at =
-      record.field(UPDATED_AT_COL).value().toDateTime().toSecsSinceEpoch();
-  ticket.on_service = record.field(ON_SERVICE_COL).value().toBool();
-  ticket.is_done = record.field(IS_DONE_COL).value().toBool();
-  ticket.is_voiced = record.field(IS_VOICED_COL).value().toBool();
-  ticket.is_manual = record.field(IS_MANUAL_COL).value().toBool();
-  ticket.window_number = record.field(WINDOW_NUMBER_COL).value().toInt();
-  return ticket;
+QJsonObject TicketModel::extractFromRecord(const QSqlRecord &record,
+                                           ExtractionModes mode) const {
+  QJsonObject result;
+  result.insert(kIdCol, record.field(kIdCol).value().toInt());
+  result.insert(kNumberByActionCol,
+                record.field(kNumberByActionCol).value().toInt());
+  const auto actionFieldName = mode == ExtractionModes::INSERT
+                                   ? kActionIdCol
+                                   : TicketActionModel::kNameCol;
+  const auto actionName = record.field(actionFieldName).value().toString();
+  result.insert(TicketActionModel::kNameCol, actionName);
+  auto ticketModel = TicketActionModel{}.getByName(actionName);
+  result.insert(kTicketNumber,
+                ticketModel->prefix +
+                    QString::number(result.value(kNumberByActionCol).toInt()));
+  result.insert(kUserIdCol, record.field(kUserIdCol).value().toInt());
+  result.insert(
+      kCreatedAtCol,
+      record.field(kCreatedAtCol).value().toDateTime().toSecsSinceEpoch());
+  result.insert(
+      kUpdatedAtCol,
+      record.field(kUpdatedAtCol).value().toDateTime().toSecsSinceEpoch());
+  result.insert(kOnServiceCol, record.field(kOnServiceCol).value().toBool());
+  result.insert(kIsDoneCol, record.field(kIsDoneCol).value().toBool());
+  result.insert(kIsVoicedCol, record.field(kIsVoicedCol).value().toBool());
+  result.insert(kIsManualCol, record.field(kIsManualCol).value().toBool());
+  result.insert(kWindowNumberCol,
+                record.field(kWindowNumberCol).value().toInt());
+  return result;
 }

@@ -30,10 +30,14 @@ QString Database::dateToStringFilter(const QDate& date) {
       .arg(date.toString("dd/MM/yyyy"));
 }
 
-QJsonObject Database::sqlRecordToJsonObject(QSqlRecord&& record) {
+QJsonObject Database::sqlRecordToJsonObject(const QSqlRecord& record) {
   QJsonObject result;
   for (int i = 0; i < record.count(); ++i) {
     result.insert(record.fieldName(i), record.field(i).value().toString());
   }
   return result;
+}
+
+void Database::closeConnection(const QString& name) {
+  QSqlDatabase::removeDatabase(name);
 }

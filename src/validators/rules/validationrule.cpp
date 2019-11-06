@@ -6,10 +6,6 @@ ValidationRule::ValidationRule(const QByteArray& parameter)
 
 ValidationRule::operator bool() { return Validate(); }
 
-AlwaysTrueRule::AlwaysTrueRule(const QByteArray&) : ValidationRule() {}
+bool TrueRule::Validate() const { return true; }
 
-bool AlwaysTrueRule::Validate() const { return true; }
-
-AlwaysFalseRule::AlwaysFalseRule(const QByteArray&) : ValidationRule() {}
-
-bool AlwaysFalseRule::Validate() const { return false; }
+bool FalseRule::Validate() const { return false; }

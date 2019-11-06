@@ -3,10 +3,11 @@ DEPENDPATH += $$PWD
 
 QT += core sql network
 
-SOURCES += $$PWD/controllers/ticketcountercontroller.cpp \
-    $$PWD/controllers/statisticscontroller.cpp \
-    $$PWD/models/statisticsmodel.cpp \
-    $$PWD/ticketcounter.cpp
+SOURCES += $$PWD/controllers/ticketcountercontroller.cpp
+SOURCES += $$PWD/controllers/statisticscontroller.cpp
+SOURCES += $$PWD/entities/ticket.cpp
+SOURCES += $$PWD/models/statisticsmodel.cpp
+SOURCES += $$PWD/ticketcounter.cpp
 SOURCES += $$PWD/requestmapper.cpp
 SOURCES += $$PWD/controllers/modelcontroller.cpp
 SOURCES += $$PWD/routing/route.cpp
@@ -19,7 +20,6 @@ SOURCES += $$PWD/models/ticketmodel.cpp
 SOURCES += $$PWD/models/ticketactionmodel.cpp
 SOURCES += $$PWD/models/usermodel.cpp
 SOURCES += $$PWD/controllers/usercontroller.cpp
-SOURCES += $$PWD/controllers/API/apiticketcontroller.cpp
 SOURCES += $$PWD/validators/rules/validationrule.cpp
 SOURCES += $$PWD/validators/rules/idrule.cpp
 SOURCES += $$PWD/validators/rules/windowrule.cpp
@@ -29,9 +29,9 @@ SOURCES += $$PWD/validators/rules/intrule.cpp
 SOURCES += $$PWD/serversettings.cpp
 SOURCES += $$PWD/databasemigrator.cpp
 
-HEADERS += $$PWD/requestmapper.h \
-  $$PWD/controllers/statisticscontroller.h \
-  $$PWD/models/statisticsmodel.h
+HEADERS += $$PWD/requestmapper.h
+HEADERS += $$PWD/controllers/statisticscontroller.h
+HEADERS += $$PWD/models/statisticsmodel.h
 HEADERS += $$PWD/controllers/ticketcountercontroller.h
 HEADERS += $$PWD/database.h
 HEADERS += $$PWD/controllers/modelcontroller.h
@@ -48,7 +48,6 @@ HEADERS += $$PWD/entities/ticket.h
 HEADERS += $$PWD/entities/ticketaction.h
 HEADERS += $$PWD/entities/entity.h
 HEADERS += $$PWD/entities/user.h
-HEADERS += $$PWD/controllers/API/apiticketcontroller.h
 HEADERS += $$PWD/ticketcounter.h
 HEADERS += $$PWD/validators/rules/validationrule.h
 HEADERS += $$PWD/validators/rules/idrule.h

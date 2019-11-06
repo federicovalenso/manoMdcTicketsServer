@@ -3,7 +3,7 @@
 
 #include "validationrule.h"
 
-template <class _If, class _Then = AlwaysTrueRule, class _Else = AlwaysFalseRule>
+template <class _If, class _Then = TrueRule, class _Else = FalseRule>
 class IfRule : public ValidationRule
 {
 public:

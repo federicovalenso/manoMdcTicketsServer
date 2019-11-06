@@ -15,39 +15,43 @@ class TicketModel : public Model {
   TicketModel();
   ~TicketModel() = default;
 
-  std::optional<Ticket> save(const TableOptions& options) noexcept;
-  std::optional<Ticket> updateTicket(const TableOptions& options) noexcept;
-  std::optional<Ticket> getOldestNonVoicedTicket() noexcept;
-  std::optional<Ticket> getById(int id) noexcept;
-  std::optional<Ticket> getByFilter(QString filter) noexcept;
+  std::optional<QJsonObject> save(const TableOptions& options) noexcept;
+  std::optional<QJsonObject> updateTicket(const TableOptions& options) noexcept;
+  std::optional<QJsonObject> getOldestNonVoicedTicket() noexcept;
+  std::optional<QJsonObject> getById(int id) noexcept;
+  std::optional<QJsonObject> getByFilter(QString filter) noexcept;
 
-  QVector<Ticket> getAll() noexcept;
-  QVector<Ticket> getAvailableTickets(bool on_service = false,
-                                      bool is_manual = false) noexcept;
+  QVector<QJsonObject> getAll() noexcept;
+  QVector<QJsonObject> getAvailableTickets(bool on_service = false,
+                                           bool is_manual = false) noexcept;
 
-  static const QString TABLE_NAME;
-  static const int ACTION_ID_COL_NUMBER = 2;
-  static const int CREATED_AT_COL_NUMBER = 4;
-  static const QString NUMBER_BY_ACTION_COL;
-  static const QString TICKET_ID_COL;
-  static const QString ACTION_ID_COL;
-  static const QString USER_ID_COL;
-  static const QString ON_SERVICE_COL;
-  static const QString IS_MANUAL_COL;
-  static const QString IS_DONE_COL;
-  static const QString IS_VOICED_COL;
-  static const QString WINDOW_NUMBER_COL;
-  static const QByteArray ON_SERVICE_PARAM;
-  static const QByteArray IS_MANUAL_PARAM;
-  static const QByteArray IS_DONE_PARAM;
-  static const QByteArray IS_VOICED_PARAM;
-  static const QByteArray WINDOW_NUMBER_PARAM;
+  static const QString kTableName;
+  static const int kActionIdColNumber = 2;
+  static const int kCreatedAtColNumber = 4;
+  static const QString kNumberByActionCol;
+  static const QString kTicketIdCol;
+  static const QString kActionIdCol;
+  static const QString kUserIdCol;
+  static const QString kOnServiceCol;
+  static const QString kIsManualCol;
+  static const QString kIsDoneCol;
+  static const QString kIsVoicedCol;
+  static const QString kWindowNumberCol;
+  static const QString kTicketNumber;
+  static const QByteArray kOnServiceParam;
+  static const QByteArray kIsManualParam;
+  static const QByteArray kIsDoneParam;
+  static const QByteArray kIsVoicedParam;
+  static const QByteArray kWindowNumberParam;
 
  private:
   std::unique_ptr<QSqlRelationalTableModel> model_;
+  enum class ExtractionModes { INSERT, SELECT };
 
   bool validateOptions(const TableOptions& options) const;
-  Ticket extractFromRecord(const QSqlRecord& record) const;
+  QJsonObject extractFromRecord(
+      const QSqlRecord& record,
+      ExtractionModes mode = ExtractionModes::SELECT) const;
 };
 
 #endif  // TICKETMODEL_H

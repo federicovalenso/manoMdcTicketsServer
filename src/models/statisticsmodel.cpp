@@ -20,7 +20,7 @@ std::vector<CountByHour> StatisticsModel::getCountsByInterval(const QDate &from,
                   database_);
   QJsonArray jsonArray;
   std::vector<CountByHour> result;
-  result.reserve(model_.rowCount());
+  result.reserve(static_cast<size_t>(model_.rowCount()));
   for (int i = 0; i < model_.rowCount(); ++i) {
     result.emplace_back(
         model_.record(i).field("created_hour").value().toString(),

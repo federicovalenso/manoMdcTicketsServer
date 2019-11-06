@@ -20,15 +20,15 @@ class ValidationRule {
   QByteArray parameter_;
 };
 
-class AlwaysTrueRule : public ValidationRule {
+class TrueRule : public ValidationRule {
  public:
-  AlwaysTrueRule(const QByteArray& parameter = "");
+  TrueRule() = default;
   virtual bool Validate() const override;
 };
 
-class AlwaysFalseRule : public ValidationRule {
+class FalseRule : public ValidationRule {
  public:
-  AlwaysFalseRule(const QByteArray& parameter = "");
+  FalseRule() = default;
   virtual bool Validate() const override;
 };
 

@@ -3,15 +3,15 @@
 
 using namespace std;
 
-const QString TicketActionModel::TABLE_NAME = "ticketActions";
-const QString TicketActionModel::NAME_COL = "action_name";
-const QString TicketActionModel::PREFIX_COL = "prefix";
+const QString TicketActionModel::kTableName = "ticketActions";
+const QString TicketActionModel::kNameCol = "action_name";
+const QString TicketActionModel::kPrefixCol = "prefix";
 
 TicketActionModel::TicketActionModel() : Model("TicketActionModel") {
-  columns_.insert(TicketActionModel::NAME_COL);
+  columns_.insert(kNameCol);
   model_ = std::make_unique<QSqlTableModel>(
       nullptr, QSqlDatabase::database(kConnectionName));
-  model_->setTable(TicketActionModel::TABLE_NAME);
+  model_->setTable(kTableName);
 }
 
 QVector<TicketAction> TicketActionModel::getAll() {
@@ -21,11 +21,9 @@ QVector<TicketAction> TicketActionModel::getAll() {
   for (int i = 0; i < model_->rowCount(); i++) {
     auto record = model_->record(i);
     TicketAction ticketAction;
-    ticketAction.id = record.field(Model::ID_COL).value().toInt();
-    ticketAction.name =
-        record.field(TicketActionModel::NAME_COL).value().toString();
-    ticketAction.prefix =
-        record.field(TicketActionModel::PREFIX_COL).value().toString();
+    ticketAction.id = record.field(kIdCol).value().toInt();
+    ticketAction.name = record.field(kNameCol).value().toString();
+    ticketAction.prefix = record.field(kPrefixCol).value().toString();
     result.push_back(std::move(ticketAction));
   }
   return result;
@@ -33,17 +31,15 @@ QVector<TicketAction> TicketActionModel::getAll() {
 
 optional<TicketAction> TicketActionModel::getByName(
     const QString& name) noexcept {
-  QString filter =
-      QString("%1='%2'").arg(TicketActionModel::NAME_COL).arg(name);
+  QString filter = QString("%1='%2'").arg(kNameCol).arg(name);
   model_->setFilter(filter);
   model_->select();
   if (model_->rowCount() == 1) {
     auto record = model_->record(0);
     TicketAction result;
-    result.id = record.field(Model::ID_COL).value().toInt();
-    result.name = record.field(TicketActionModel::NAME_COL).value().toString();
-    result.prefix =
-        record.field(TicketActionModel::PREFIX_COL).value().toString();
+    result.id = record.field(kIdCol).value().toInt();
+    result.name = record.field(kNameCol).value().toString();
+    result.prefix = record.field(kPrefixCol).value().toString();
     return move(result);
   }
   return nullopt;
@@ -53,9 +49,8 @@ QVector<TicketAction> TicketActionModel::getByNamesArray(
     const QJsonArray& names = {}) {
   QString filter;
   for (const auto& name : names) {
-    QString nameCondition = QString("%1='%2' AND ")
-                                .arg(TicketActionModel::NAME_COL)
-                                .arg(name.toString());
+    QString nameCondition =
+        QString("%1='%2' AND ").arg(kNameCol).arg(name.toString());
     filter.append(nameCondition);
   }
   if (filter.size() > 0) {
@@ -68,9 +63,9 @@ QVector<TicketAction> TicketActionModel::getByNamesArray(
     for (int i = 0; i < model_->rowCount(); i++) {
       auto record = model_->record(i);
       TicketAction ticketAction;
-      ticketAction.id = record.field(Model::ID_COL).value().toInt();
-      ticketAction.name =
-          record.field(TicketActionModel::NAME_COL).value().toString();
+      ticketAction.id = record.field(kIdCol).value().toInt();
+      ticketAction.name = record.field(kNameCol).value().toString();
+      ticketAction.prefix = record.field(kPrefixCol).value().toString();
       result.push_back(std::move(ticketAction));
     }
   }

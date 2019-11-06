@@ -6,7 +6,6 @@
 #include <QJsonObject>
 #include <QSqlField>
 
-#include <rules>
 #include "entities/ticketaction.h"
 #include "entities/user.h"
 #include "models/ticketactionmodel.h"
@@ -20,13 +19,10 @@
 using namespace std;
 using namespace stefanfrings;
 
-const QByteArray TicketController::ACTION_PARAM = "action";
-const QString TicketController::TICKET_NUMBER = "ticket_number";
-const QString TicketController::WINDOW_NUMBER = "window_number";
+const QByteArray TicketController::kAction = "action";
+const QString TicketController::kWindowNumber = "window_number";
 
 inline bool toBool(const QByteArray &value) { return value == "1"; }
-
-TicketController::TicketController() {}
 
 QVariant getLoggedInUserId(HttpRequest &request, HttpResponse &response) {
   auto session =
@@ -39,21 +35,12 @@ void TicketController::index(HttpRequest &request,
   response.setHeader("Content-Type", "application/json");
   if (validateIndexRequest(request)) {
     auto parameters = request.getParameterMap();
-    QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
-    QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
+    QByteArray on_service = parameters.value(TicketModel::kOnServiceParam);
+    QByteArray is_manual = parameters.value(TicketModel::kIsManualParam);
     QJsonArray jsonArr;
     for (const auto &ticket : TicketModel().getAvailableTickets(
              toBool(on_service), toBool((is_manual)))) {
-      QJsonObject jsonObject;
-      jsonObject.insert(TicketModel::ID_COL, ticket.id);
-      jsonObject.insert(TicketModel::CREATED_AT_COL, ticket.created_at);
-      jsonObject.insert(TicketActionModel::NAME_COL, ticket.action);
-      jsonObject.insert(TicketModel::IS_MANUAL_COL, ticket.is_manual);
-      auto ticketAction = TicketActionModel().getByName(ticket.action);
-      jsonObject.insert(
-          TICKET_NUMBER,
-          ticketAction->prefix + QString::number(ticket.number_by_action));
-      jsonArr.append(jsonObject);
+      jsonArr.append(ticket);
     }
     QJsonDocument jsonDoc(jsonArr);
     response.write(jsonDoc.toJson(QJsonDocument::JsonFormat::Compact), true);
@@ -68,26 +55,20 @@ void TicketController::store(HttpRequest &request, HttpResponse &response) {
     setUnauthorizedError(response);
     return;
   }
-  QByteArray action = request.getParameter(ACTION_PARAM);
-  if (auto ticketAction = TicketActionModel().getByName(action); ticketAction) {
-    TableOptions options;
-    options.insert(TicketModel::ACTION_ID_COL, ticketAction->id);
-    options.insert(TicketModel::CREATED_AT_COL, TicketModel::getCurrentTime());
+  QByteArray action = request.getParameter(kAction);
+  TableOptions options;
+  if (const auto ticketAction = TicketActionModel{}.getByName(action);
+      ticketAction) {
+    options.insert(TicketModel::kActionIdCol, ticketAction->id);
+    options.insert(TicketModel::kCreatedAtCol, Model::getCurrentTime());
     if (auto ticket = TicketModel().save(options); ticket) {
-      QJsonObject jsonObject;
-      jsonObject.insert(
-          TICKET_NUMBER,
-          ticketAction->prefix + QString::number(ticket->number_by_action));
-      jsonObject.insert(ACTION_PARAM, QString(action));
-      jsonObject.insert(TicketModel::IS_VOICED_COL, ticket->is_voiced);
-      QJsonDocument doc(jsonObject);
-      response.write(doc.toJson(), true);
+      response.write(QJsonDocument(*ticket).toJson(), true);
       ++TicketCounter::instance();
     } else {
       setServerError(response);
     }
   } else {
-    setClientError(response);
+    setServerError(response);
   }
 }
 
@@ -100,95 +81,169 @@ void TicketController::show(HttpRequest &request,
   }
   TicketModel ticketModel;
   if (auto ticket = ticketModel.getOldestNonVoicedTicket(); ticket) {
-    QJsonObject jsonObject;
-    jsonObject.insert(TicketModel::ID_COL, ticket->id);
-    auto ticketAction = TicketActionModel().getByName(ticket->action);
-    jsonObject.insert(
-        TICKET_NUMBER,
-        ticketAction->prefix + QString::number(ticket->number_by_action));
-    jsonObject.insert(WINDOW_NUMBER, ticket->window_number);
-    QJsonDocument doc(jsonObject);
-    response.write(doc.toJson(), true);
+    response.write(QJsonDocument(*ticket).toJson(), true);
   } else {
     response.write(QJsonDocument(QJsonObject()).toJson(), true);
   }
 }
 
-void TicketController::update(HttpRequest &request, HttpResponse &response) {
+void TicketController::voiceTicket(HttpRequest &request,
+                                   HttpResponse &response) const {
+  response.setHeader("Content-Type", "application/json");
+  if (getLoggedInUserId(request, response).isNull()) {
+    setUnauthorizedError(response);
+    return;
+  }
+  auto id = request.getParameter(TicketModel::kIdColParam);
+  auto is_voiced = request.getParameter(TicketModel::kIsVoicedParam);
+  if (!IdRule(id) || !BoolRule(is_voiced)) {
+    setClientError(response);
+    return;
+  }
+  if (const auto ticket = TicketModel().updateTicket(
+          {{TicketModel::kIdCol, id}, {TicketModel::kIsVoicedCol, is_voiced}});
+      ticket) {
+    response.setStatus(200);
+    response.write(QJsonDocument(*ticket).toJson(), true);
+  } else {
+    setClientError(response);
+  }
+}
+
+void TicketController::takeTicket(HttpRequest &request,
+                                  HttpResponse &response) const {
   response.setHeader("Content-Type", "application/json");
   auto user_id = getLoggedInUserId(request, response);
   if (user_id.isNull()) {
     setUnauthorizedError(response);
     return;
   }
-  auto params = request.getParameterMap();
-  auto id = params.value(TicketModel::ID_COL_PARAM).toInt();
-  if (std::lock_guard g{ids_locker_};
-      find(cbegin(locked_ticket_ids_), cend(locked_ticket_ids_), id) !=
-      cend(locked_ticket_ids_)) {
-    response.setStatus(409, "Conflict");
-    return;
-  } else {
-    locked_ticket_ids_.push_back(id);
-  }
-  if (!validateUpdateRequest(request)) {
+  auto id = request.getParameter(TicketModel::kIdColParam);
+  auto on_service = request.getParameter(TicketModel::kOnServiceParam);
+  auto window_number = request.getParameter(TicketModel::kWindowNumberParam);
+  if (!IdRule(id) || !BoolRule(on_service) || !WindowRule(window_number)) {
     setClientError(response);
-    unlockTicket(id);
+    return;
+  }
+  lock_guard guard{ids_locker_};
+  TicketModel ticketModel;
+  if (auto ticket = ticketModel.getById(id.toInt()); ticket) {
+    if (ticket->value(TicketModel::kOnServiceCol).toBool() &&
+        on_service.toInt() == 1) {
+      response.setStatus(409, "Conflict");
+      return;
+    }
+  } else {
+    setClientError(response);
+    return;
+  }
+  if (const auto ticket = TicketModel().updateTicket(
+          {{TicketModel::kIdCol, id},
+           {TicketModel::kUserIdCol, user_id},
+           {TicketModel::kOnServiceCol, on_service},
+           {TicketModel::kWindowNumberCol, window_number}});
+      ticket) {
+    response.setStatus(200);
+    response.write(QJsonDocument(*ticket).toJson(), true);
+  } else {
+    setClientError(response);
+  }
+}
+
+void TicketController::returnTicket(HttpRequest &request,
+                                    HttpResponse &response) const {
+  response.setHeader("Content-Type", "application/json");
+  auto user_id = getLoggedInUserId(request, response);
+  if (user_id.isNull()) {
+    setUnauthorizedError(response);
+    return;
+  }
+  auto id = request.getParameter(TicketModel::kIdColParam);
+  if (!IdRule(id)) {
+    setClientError(response);
     return;
   }
   TicketModel ticketModel;
-  if (auto ticket = ticketModel.getById(id); ticket) {
-    if (ticket->on_service == 1 &&
-        params.value(TicketModel::ON_SERVICE_PARAM).toInt() == 1) {
+  if (auto ticket = ticketModel.getById(id.toInt()); ticket) {
+    if (ticket->value(TicketModel::kUserIdCol).toInt() != user_id) {
       setClientError(response);
-      unlockTicket(id);
       return;
     }
+  } else {
+    setClientError(response);
+    return;
   }
-  TableOptions options;
-  options.insert(TicketModel::USER_ID_COL, user_id.toInt());
-  for (auto it = params.cbegin(); it != params.cend(); ++it) {
-    options.insert(it.key(), it.value());
-  }
-  if (ticketModel.updateTicket(options)) {
+  if (const auto ticket =
+          TicketModel().updateTicket({{TicketModel::kIdCol, id},
+                                      {TicketModel::kOnServiceCol, 0},
+                                      {TicketModel::kIsManualCol, 1}});
+      ticket) {
     response.setStatus(200);
+    response.write(QJsonDocument(*ticket).toJson(), true);
   } else {
     setClientError(response);
   }
-  unlockTicket(id);
+}
+
+void TicketController::finishTicket(HttpRequest &request,
+                                    HttpResponse &response) const {
+  response.setHeader("Content-Type", "application/json");
+  auto user_id = getLoggedInUserId(request, response);
+  if (user_id.isNull()) {
+    setUnauthorizedError(response);
+    return;
+  }
+  auto id = request.getParameter(TicketModel::kIdColParam);
+  if (!IdRule(id)) {
+    setClientError(response);
+    return;
+  }
+  TicketModel ticketModel;
+  if (auto ticket = ticketModel.getById(id.toInt()); ticket) {
+    if (ticket->value(TicketModel::kUserIdCol).toInt() != user_id) {
+      setClientError(response);
+      return;
+    }
+  } else {
+    setClientError(response);
+    return;
+  }
+  if (const auto ticket =
+          ticketModel.updateTicket({{TicketModel::kIdCol, id},
+                                    {TicketModel::kIsVoicedCol, 1},
+                                    {TicketModel::kOnServiceCol, 1},
+                                    {TicketModel::kIsDoneCol, 1}});
+      ticket) {
+    response.setStatus(200);
+    response.write(QJsonDocument(*ticket).toJson(), true);
+  } else {
+    setClientError(response);
+  }
 }
 
 bool TicketController::validateIndexRequest(HttpRequest &request) const
     noexcept {
-  auto parameters = request.getParameterMap();
-  QByteArray on_service = parameters.value(TicketModel::ON_SERVICE_PARAM);
-  QByteArray is_manual = parameters.value(TicketModel::IS_MANUAL_PARAM);
+  auto on_service = request.getParameter(TicketModel::kOnServiceParam);
+  auto is_manual = request.getParameter(TicketModel::kIsManualParam);
   return Validate(
-      IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
-          EmptyValueRule(on_service), AlwaysTrueRule(), BoolRule(on_service)),
-      IfRule<EmptyValueRule, AlwaysTrueRule, BoolRule>(
-          EmptyValueRule(is_manual), AlwaysTrueRule(), BoolRule(is_manual)));
+      IfRule<EmptyValueRule, TrueRule, BoolRule>(
+          EmptyValueRule(on_service), TrueRule(), BoolRule(on_service)),
+      IfRule<EmptyValueRule, TrueRule, BoolRule>(
+          EmptyValueRule(is_manual), TrueRule(), BoolRule(is_manual)));
 }
 
 bool TicketController::validateUpdateRequest(HttpRequest &request) const
     noexcept {
   auto parameters = request.getParameterMap();
-  IntRule checkOnServiceValue(parameters.value(TicketModel::ON_SERVICE_PARAM),
+  IntRule checkOnServiceValue(parameters.value(TicketModel::kOnServiceParam),
                               0);
-  IntRule checkIsDoneValue(parameters.value(TicketModel::IS_DONE_PARAM), 0);
-  return Validate(
-      IdRule(parameters.value(TicketModel::ID_COL_PARAM)),
-      BoolRule(parameters.value(TicketModel::ON_SERVICE_PARAM)),
-      BoolRule(parameters.value(TicketModel::IS_DONE_PARAM)),
-      BoolRule(parameters.value(TicketModel::IS_VOICED_PARAM)),
-      BoolRule(parameters.value(TicketModel::IS_MANUAL_PARAM)),
-      WindowRule(parameters.value(TicketModel::WINDOW_NUMBER_PARAM)),
-      IfRule<IntRule, IntRule, AlwaysTrueRule>(
-          checkOnServiceValue, checkIsDoneValue, AlwaysTrueRule()));
-}
-
-void TicketController::unlockTicket(int id) {
-  lock_guard g{ids_locker_};
-  locked_ticket_ids_.erase(
-      find(cbegin(locked_ticket_ids_), cend(locked_ticket_ids_), id));
+  IntRule checkIsDoneValue(parameters.value(TicketModel::kIsDoneParam), 0);
+  return Validate(IdRule(parameters.value(TicketModel::kIdColParam)),
+                  BoolRule(parameters.value(TicketModel::kOnServiceParam)),
+                  BoolRule(parameters.value(TicketModel::kIsDoneParam)),
+                  BoolRule(parameters.value(TicketModel::kIsVoicedParam)),
+                  BoolRule(parameters.value(TicketModel::kIsManualParam)),
+                  WindowRule(parameters.value(TicketModel::kWindowNumberParam)),
+                  IfRule<IntRule, IntRule, TrueRule>(
+                      checkOnServiceValue, checkIsDoneValue, TrueRule()));
 }

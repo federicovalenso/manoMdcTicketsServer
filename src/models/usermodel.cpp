@@ -47,7 +47,7 @@ std::optional<User> UserModel::selectByFilter(QString filter) {
   if (model_->rowCount() == 1) {
     User result;
     auto record = model_->record(0);
-    result.id = record.field(Model::ID_COL).value().toInt();
+    result.id = record.field(Model::kIdCol).value().toInt();
     result.name = record.field(NAME_COL).value().toString();
     return move(result);
   } else {

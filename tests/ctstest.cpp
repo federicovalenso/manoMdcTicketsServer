@@ -115,21 +115,18 @@ void CtsTest::TestAuthorization() {
   network_access_manager_->post(request,
                                 params.toString(QUrl::FullyEncoded).toUtf8());
   QEventLoop loop;
-  connect(
-      network_access_manager_, &QNetworkAccessManager::finished,
+  processRequest(
       [&](QNetworkReply* reply) {
         loop.quit();
         QCOMPARE(reply->error(), QNetworkReply::NetworkError::NoError);
         network_access_manager_->cookieJar()->insertCookie(getCookie(*reply));
-      });
-  QCoreApplication::processEvents();
-  loop.exec();
-  disconnect(network_access_manager_, &QNetworkAccessManager::finished, nullptr,
-             nullptr);
+      },
+      loop);
 }
 
-void CtsTest::TestSimplePost() {
-  QString address = QString("http://%1:%2/tickets").arg(kLocalHost).arg(port_);
+void CtsTest::TestTicketAdd() {
+  QString address =
+      QString("http://%1:%2/api/tickets").arg(kLocalHost).arg(port_);
   QUrl url(address);
   QNetworkRequest request(url);
   request.setHeader(QNetworkRequest::ContentTypeHeader,
@@ -140,15 +137,12 @@ void CtsTest::TestSimplePost() {
     network_access_manager_->post(request,
                                   params.toString(QUrl::FullyEncoded).toUtf8());
     QEventLoop loop;
-    connect(network_access_manager_, &QNetworkAccessManager::finished,
-            [&](QNetworkReply* reply) {
-              loop.quit();
-              QCOMPARE(reply->error(), QNetworkReply::NetworkError::NoError);
-            });
-    QCoreApplication::processEvents();
-    loop.exec();
-    disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-               nullptr, nullptr);
+    processRequest(
+        [&](QNetworkReply* reply) {
+          loop.quit();
+          QCOMPARE(reply->error(), QNetworkReply::NetworkError::NoError);
+        },
+        loop);
   }
   {
     QUrlQuery params;
@@ -156,15 +150,12 @@ void CtsTest::TestSimplePost() {
     network_access_manager_->post(request,
                                   params.toString(QUrl::FullyEncoded).toUtf8());
     QEventLoop loop;
-    connect(network_access_manager_, &QNetworkAccessManager::finished,
-            [&](QNetworkReply* reply) {
-              loop.quit();
-              QVERIFY(reply->error() != QNetworkReply::NetworkError::NoError);
-            });
-    QCoreApplication::processEvents();
-    loop.exec();
-    disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-               nullptr, nullptr);
+    processRequest(
+        [&](QNetworkReply* reply) {
+          loop.quit();
+          QVERIFY(reply->error() != QNetworkReply::NetworkError::NoError);
+        },
+        loop);
   }
 }
 
@@ -203,52 +194,46 @@ Ticket ExtractTicketFromJson(QJsonObject object) {
   return result;
 }
 
-void CtsTest::TestParallelAndIncorrectUpdate() {
-  QString address = QString("http://%1:%2/tickets?%3=0")
-                        .arg(kLocalHost)
-                        .arg(port_)
-                        .arg(kOnService);
-  QUrl url(address);
-  QNetworkRequest request(url);
+void CtsTest::TestTicketUpdate() {
   QJsonArray json_tickets;
   {
+    QString address = QString("http://%1:%2/api/tickets?%3=0")
+                          .arg(kLocalHost)
+                          .arg(port_)
+                          .arg(kOnService);
+    QUrl url(address);
+    QNetworkRequest request(url);
     network_access_manager_->get(request);
     QEventLoop loop;
-    connect(network_access_manager_, &QNetworkAccessManager::finished,
-            [&json_tickets, &loop](QNetworkReply* reply) {
-              loop.quit();
-              QVERIFY(reply->error() == QNetworkReply::NetworkError::NoError);
-              const QJsonDocument jsonInput =
-                  QJsonDocument::fromJson(reply->readAll());
-              QVERIFY(!jsonInput.isEmpty());
-              QVERIFY(jsonInput.isArray());
-              json_tickets = jsonInput.array();
-            });
-    QCoreApplication::processEvents();
-    loop.exec();
-    disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-               nullptr, nullptr);
+    processRequest(
+        [&json_tickets, &loop](QNetworkReply* reply) {
+          loop.quit();
+          QVERIFY(reply->error() == QNetworkReply::NetworkError::NoError);
+          const QJsonDocument jsonInput =
+              QJsonDocument::fromJson(reply->readAll());
+          QVERIFY(!jsonInput.isEmpty());
+          QVERIFY(jsonInput.isArray());
+          json_tickets = jsonInput.array();
+        },
+        loop);
   }
   QVERIFY(json_tickets.size() > 0);
+  auto fromBool = [](bool value) { return value ? "1" : "0"; };
   {
     auto ticket = ExtractTicketFromJson(json_tickets[0].toObject());
     ticket.on_service = true;
-    auto fromBool = [](bool value) { return value ? "1" : "0"; };
-    QUrlQuery params;
-    params.addQueryItem(kId, QString::number(ticket.id));
-    params.addQueryItem(kOnService, fromBool(ticket.on_service));
-    params.addQueryItem(kIsDone, fromBool(ticket.is_done));
-    params.addQueryItem(kIsVoiced, fromBool(ticket.is_voiced));
-    params.addQueryItem(kIsManual, fromBool(ticket.is_manual));
-    params.addQueryItem(kWindow, "1");
-
-    QString address =
-        QString("http://%1:%2/tickets").arg(kLocalHost).arg(port_);
-    QUrl url(address);
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader,
-                      "application/x-www-form-urlencoded");
     {
+      QUrlQuery params;
+      params.addQueryItem(kId, QString::number(ticket.id));
+      params.addQueryItem(kOnService, fromBool(ticket.on_service));
+      params.addQueryItem(kWindow, "1");
+
+      QString address =
+          QString("http://%1:%2/api/ticket/take").arg(kLocalHost).arg(port_);
+      QUrl url(address);
+      QNetworkRequest request(url);
+      request.setHeader(QNetworkRequest::ContentTypeHeader,
+                        "application/x-www-form-urlencoded");
       network_access_manager_->put(
           request, params.toString(QUrl::FullyEncoded).toUtf8());
       network_access_manager_->put(
@@ -261,36 +246,105 @@ void CtsTest::TestParallelAndIncorrectUpdate() {
         uint32_t conflict = 0;
       } counter;
       QMutex mutex;
-      connect(network_access_manager_, &QNetworkAccessManager::finished,
-              [&](QNetworkReply* reply) {
-                QMutexLocker locker(&mutex);
-                if (reply->error() == QNetworkReply::NetworkError::NoError) {
-                  ++counter.success;
-                } else {
-                  ++counter.conflict;
-                }
-                if (counter.success + counter.conflict == 3) loop.quit();
-              });
-      QCoreApplication::processEvents();
-      loop.exec();
-      disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-                 nullptr, nullptr);
+      processRequest(
+          [&](QNetworkReply* reply) {
+            QMutexLocker locker(&mutex);
+            if (reply->error() == QNetworkReply::NetworkError::NoError) {
+              ++counter.success;
+            } else {
+              ++counter.conflict;
+            }
+            if (counter.success + counter.conflict == 3) loop.quit();
+          },
+          loop);
       QCOMPARE(counter.success, 1);
       QCOMPARE(counter.conflict, 2);
     }
+    ticket.is_voiced = 1;
     {
+      QUrlQuery params;
+      params.addQueryItem(kId, QString::number(ticket.id));
+      params.addQueryItem(kIsVoiced, fromBool(ticket.is_voiced));
+
+      QString address =
+          QString("http://%1:%2/api/ticket/voice").arg(kLocalHost).arg(port_);
+      QUrl url(address);
+      QNetworkRequest request(url);
+      request.setHeader(QNetworkRequest::ContentTypeHeader,
+                        "application/x-www-form-urlencoded");
       network_access_manager_->put(
           request, params.toString(QUrl::FullyEncoded).toUtf8());
       QEventLoop loop;
-      connect(network_access_manager_, &QNetworkAccessManager::finished,
-              [&](QNetworkReply* reply) {
-                loop.quit();
-                QVERIFY(reply->error() != QNetworkReply::NetworkError::NoError);
-              });
-      QCoreApplication::processEvents();
-      loop.exec();
-      disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-                 nullptr, nullptr);
+      processRequest(
+          [&](QNetworkReply* reply) {
+            loop.quit();
+            QVERIFY(reply->error() == QNetworkReply::NoError);
+          },
+          loop);
+    }
+    {
+      QUrlQuery params;
+      params.addQueryItem(kId, QString::number(ticket.id));
+
+      QString address =
+          QString("http://%1:%2/api/ticket/return").arg(kLocalHost).arg(port_);
+      QUrl url(address);
+      QNetworkRequest request(url);
+      request.setHeader(QNetworkRequest::ContentTypeHeader,
+                        "application/x-www-form-urlencoded");
+      network_access_manager_->put(
+          request, params.toString(QUrl::FullyEncoded).toUtf8());
+      QEventLoop loop;
+      processRequest(
+          [&](QNetworkReply* reply) {
+            loop.quit();
+            QVERIFY(reply->error() == QNetworkReply::NoError);
+          },
+          loop);
+    }
+    {
+      QUrlQuery params;
+      params.addQueryItem(kId, QString::number(ticket.id));
+      params.addQueryItem(kOnService, fromBool(ticket.on_service));
+      params.addQueryItem(kWindow, "1");
+
+      QString address =
+          QString("http://%1:%2/api/ticket/take").arg(kLocalHost).arg(port_);
+      QUrl url(address);
+      QNetworkRequest request(url);
+      request.setHeader(QNetworkRequest::ContentTypeHeader,
+                        "application/x-www-form-urlencoded");
+      network_access_manager_->put(
+          request, params.toString(QUrl::FullyEncoded).toUtf8());
+      QEventLoop loop;
+      processRequest(
+          [&](QNetworkReply* reply) {
+            loop.quit();
+            QVERIFY(reply->error() == QNetworkReply::NoError);
+          },
+          loop);
+    }
+    ticket.is_done = 1;
+    {
+      QUrlQuery params;
+      params.addQueryItem(kId, QString::number(ticket.id));
+      params.addQueryItem(kIsDone, fromBool(ticket.is_done));
+
+      QString address =
+          QString("http://%1:%2/api/ticket/finish").arg(kLocalHost).arg(port_);
+      QUrl url(address);
+      QNetworkRequest request(url);
+      request.setHeader(QNetworkRequest::ContentTypeHeader,
+                        "application/x-www-form-urlencoded");
+      network_access_manager_->put(
+          request, params.toString(QUrl::FullyEncoded).toUtf8());
+      QEventLoop loop;
+      processRequest(
+          [&](QNetworkReply* reply) {
+            loop.quit();
+            QVERIFY(reply->error() == QNetworkReply::NoError);
+          },
+          loop);
     }
   }
 }
@@ -303,14 +357,20 @@ void CtsTest::TestStatistics() {
   {
     network_access_manager_->get(request);
     QEventLoop loop;
-    connect(network_access_manager_, &QNetworkAccessManager::finished,
-            [&loop](QNetworkReply* reply) {
-              loop.quit();
-              QVERIFY(reply->error() == QNetworkReply::NetworkError::NoError);
-            });
-    QCoreApplication::processEvents();
-    loop.exec();
-    disconnect(network_access_manager_, &QNetworkAccessManager::finished,
-               nullptr, nullptr);
+    processRequest(
+        [&](QNetworkReply* reply) {
+          loop.quit();
+          QVERIFY(reply->error() == QNetworkReply::NetworkError::NoError);
+        },
+        loop);
   }
+}
+
+void CtsTest::processRequest(std::function<void(QNetworkReply*)>&& func,
+                             QEventLoop& loop) {
+  connect(network_access_manager_, &QNetworkAccessManager::finished, func);
+  QCoreApplication::processEvents();
+  loop.exec();
+  disconnect(network_access_manager_, &QNetworkAccessManager::finished, nullptr,
+             nullptr);
 }

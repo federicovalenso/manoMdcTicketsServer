@@ -16,16 +16,16 @@ using TableOptions = QMap<QString, QVariant>;
 class Model {
  public:
   Model(const QString& owner);
-  virtual ~Model() = default;
+  virtual ~Model();
 
   static QString getCurrentTime() {
     return QDateTime::currentDateTime().toString("yyyy-MM-dd HH-mm-ss");
   }
 
-  static const QString ID_COL;
-  static const QString CREATED_AT_COL;
-  static const QString UPDATED_AT_COL;
-  static const QByteArray ID_COL_PARAM;
+  static const QString kIdCol;
+  static const QString kCreatedAtCol;
+  static const QString kUpdatedAtCol;
+  static const QByteArray kIdColParam;
 
  protected:
   TableColumns columns_;

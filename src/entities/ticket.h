@@ -1,6 +1,8 @@
 #ifndef TICKET_H
 #define TICKET_H
 
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "entity.h"
 
 struct Ticket : public Entity {
@@ -14,6 +16,9 @@ struct Ticket : public Entity {
   bool is_voiced = false;
   bool is_manual = false;
   int window_number;
+
+  QJsonObject toQJsonObject() const;
+  QJsonDocument toQJsonDocument() const;
 };
 
 #endif  // TICKET_H
