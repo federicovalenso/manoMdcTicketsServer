@@ -57,7 +57,7 @@ void TicketController::store(HttpRequest &request, HttpResponse &response) {
   }
   QByteArray action = request.getParameter(kAction);
   TableOptions options;
-  if (const auto ticketAction = TicketActionModel{}.getByName(action);
+  if (const auto ticketAction = TicketActionModel().getByName(action);
       ticketAction) {
     options.insert(TicketModel::kActionIdCol, ticketAction->id);
     options.insert(TicketModel::kCreatedAtCol, Model::getCurrentTime());
@@ -137,7 +137,7 @@ void TicketController::takeTicket(HttpRequest &request,
     setClientError(response);
     return;
   }
-  if (const auto ticket = TicketModel().updateTicket(
+  if (const auto ticket = ticketModel.updateTicket(
           {{TicketModel::kIdCol, id},
            {TicketModel::kUserIdCol, user_id},
            {TicketModel::kOnServiceCol, on_service},
@@ -174,9 +174,9 @@ void TicketController::returnTicket(HttpRequest &request,
     return;
   }
   if (const auto ticket =
-          TicketModel().updateTicket({{TicketModel::kIdCol, id},
-                                      {TicketModel::kOnServiceCol, 0},
-                                      {TicketModel::kIsManualCol, 1}});
+          ticketModel.updateTicket({{TicketModel::kIdCol, id},
+                                    {TicketModel::kOnServiceCol, 0},
+                                    {TicketModel::kIsManualCol, 1}});
       ticket) {
     response.setStatus(200);
     response.write(QJsonDocument(*ticket).toJson(), true);
