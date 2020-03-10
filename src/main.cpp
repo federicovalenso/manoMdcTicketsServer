@@ -6,7 +6,6 @@
 #include <QStringList>
 
 #include "databasemigrator.h"
-#include "filelogger.h"
 #include "httplistener.h"
 #include "httpsessionstore.h"
 #include "requestmapper.h"
@@ -14,6 +13,9 @@
 #include "staticfilecontroller.h"
 #include "templatecache.h"
 #include "ticketcounter.h"
+#ifdef FILELOGGING
+#include "filelogger.h"
+#endif
 
 #include <iostream>
 #include <stdexcept>
@@ -118,7 +120,7 @@ int main(int argc, char* argv[]) {
 
   auto settings_file = app.property(Settings::kSettingsFile).toString();
 
-#ifndef QT_DEBUG
+#ifdef FILELOGGING
   QSettings* logSettings =
       new QSettings(settings_file, QSettings::IniFormat, &app);
   logSettings->beginGroup("logging");
