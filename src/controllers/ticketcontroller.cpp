@@ -141,7 +141,8 @@ void TicketController::takeTicket(HttpRequest &request,
           {{TicketModel::kIdCol, id},
            {TicketModel::kUserIdCol, user_id},
            {TicketModel::kOnServiceCol, on_service},
-           {TicketModel::kWindowNumberCol, window_number}});
+           {TicketModel::kWindowNumberCol, window_number},
+           {TicketModel::kIsVoicedCol, 0}});
       ticket) {
     response.setStatus(200);
     response.write(QJsonDocument(*ticket).toJson(), true);
@@ -176,7 +177,8 @@ void TicketController::returnTicket(HttpRequest &request,
   if (const auto ticket =
           ticketModel.updateTicket({{TicketModel::kIdCol, id},
                                     {TicketModel::kOnServiceCol, 0},
-                                    {TicketModel::kIsManualCol, 1}});
+                                    {TicketModel::kIsManualCol, 1},
+                                    {TicketModel::kIsVoicedCol, 0}});
       ticket) {
     response.setStatus(200);
     response.write(QJsonDocument(*ticket).toJson(), true);
