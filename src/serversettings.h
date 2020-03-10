@@ -12,6 +12,13 @@ static const QByteArray kPort = "port";
 static const QByteArray kUserName = "user_name";
 static const QByteArray kPassword = "password";
 static const QByteArray kDbType = "db_type";
+static const QByteArray kCounterGroup = "counter";
+static const QByteArray kCurrentCount = "current_count";
+static const QByteArray kPrevCount = "prev_count";
+static const QByteArray kLastClearTime = "last_clear_time";
+static const QByteArray kCriticalCount = "critical_count";
+static const QByteArray kNotificationService = "notification_service";
+static const QByteArray kNotificationMail = "mail";
 
 void InitSettings();
 };  // namespace Settings
