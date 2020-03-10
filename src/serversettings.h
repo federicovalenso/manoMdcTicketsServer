@@ -18,7 +18,7 @@ static const QByteArray kPrevCount = "prev_count";
 static const QByteArray kLastClearTime = "last_clear_time";
 static const QByteArray kCriticalCount = "critical_count";
 static const QByteArray kNotificationService = "notification_service";
-static const QByteArray kNotificationMail = "mail";
+static const QByteArray kMailList = "mail_list";
 
 void InitSettings();
 };  // namespace Settings
