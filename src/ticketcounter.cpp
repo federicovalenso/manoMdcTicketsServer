@@ -18,7 +18,7 @@ TicketCounter::TicketCounter(QCoreApplication *parent, QSettings *settings)
         return Notificator(
             settings->value(Settings::kCriticalCount).toUInt(),
             settings->value(Settings::kNotificationService).toString(),
-            settings->value(Settings::kNotificationMail).toString());
+            settings->value(Settings::kMailList).toStringList());
       }()) {
   counter_ = settings->value(Settings::kCurrentCount).toUInt();
   prev_count_ = settings->value(Settings::kPrevCount).toUInt();
@@ -50,11 +50,7 @@ uint32_t TicketCounter::Notificator::CriticalCount() const {
   return kCriticalCount;
 }
 
-TicketCounter::Notificator::Notificator(const uint32_t critical_count,
-                                        QString &&service, QString &&mail)
-    : kCriticalCount(critical_count), kService(service), kMail(mail) {}
-
-void TicketCounter::Notificator::send() const {
+void TicketCounter::Notificator::sendMail(QString &&mail) const {
   auto network_manager = std::make_unique<QNetworkAccessManager>(nullptr);
   bool success = true;
   QEventLoop loop;
@@ -68,7 +64,7 @@ void TicketCounter::Notificator::send() const {
   QNetworkRequest request(kService);
   request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
   QJsonObject data{
-      {"To", kMail},
+      {"To", mail},
       {"Subject", "Сервис очереди в регистратуру"},
       {"Body", QString("Значение счётчика талонов: %1").arg(kCriticalCount)}};
   QJsonDocument doc(data);
@@ -83,4 +79,14 @@ void TicketCounter::Notificator::send() const {
         loop.exit();
       });
   loop.exec();
+}
+
+TicketCounter::Notificator::Notificator(const uint32_t critical_count,
+                                        QString &&service,
+                                        QStringList &&mail_list)
+    : kCriticalCount(critical_count), kService(service), kMailList(mail_list) {}
+
+void TicketCounter::Notificator::send() const {
+  QString mail;
+  foreach (mail, kMailList) { sendMail(std::move(mail)); }
 }

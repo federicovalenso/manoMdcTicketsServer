@@ -20,11 +20,13 @@ class TicketCounter : public QObject {
   class Notificator {
     const uint32_t kCriticalCount;
     const QUrl kService;
-    const QString kMail;
+    const QStringList kMailList;
+
+    void sendMail(QString&& mail) const;
 
    public:
     Notificator(const uint32_t critical_count, QString&& service,
-                QString&& mail);
+                QStringList&& mail_list);
     void send() const;
     uint32_t CriticalCount() const;
   };
