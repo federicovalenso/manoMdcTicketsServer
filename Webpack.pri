@@ -18,8 +18,8 @@ debug {
 } else {
   webpack_commands += prod
 }
-webpack_commands += && $(COPY_DIR) \"$$ASSETSDIR/docroot\" \"$$ETCDIR/docroot\"
-webpack_commands += && $(COPY_DIR) \"$$ASSETSDIR/templates\" \"$$ETCDIR/templates\"
+webpack_commands += && $(COPY_DIR) \"$$ASSETSDIR/docroot\" \"$$ETCDIR/\"
+webpack_commands += && $(COPY_DIR) \"$$ASSETSDIR/templates\" \"$$ETCDIR/\"
 webpack.target = webpack
 webpack.commands = $$webpack_commands
 
