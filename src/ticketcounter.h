@@ -4,24 +4,36 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QMetaType>
+#include <QSettings>
+#include <QUrl>
 #include <atomic>
 
 class TicketCounter : public QObject {
   Q_OBJECT
+
+  static const QByteArray kClassName;
+
   std::atomic<uint32_t> counter_ = 0;
   uint32_t prev_count_ = 0;
   QDateTime last_clear_time_ = QDateTime::currentDateTime();
 
-  static const QString kGroup;
-  static const QString kCounter;
-  static const QString kPrevCount;
-  static const QString kLastTimeClear;
+  class Notificator {
+    const uint32_t kCriticalCount;
+    const QUrl kService;
+    const QString kMail;
+
+   public:
+    Notificator(const uint32_t critical_count, QString&& service,
+                QString&& mail);
+    void send() const;
+    uint32_t CriticalCount() const;
+  };
+  const Notificator kNotificator;
 
  public:
-  static const QByteArray kClassName;
   static TicketCounter& instance();
 
-  TicketCounter(QCoreApplication* parent);
+  TicketCounter(QCoreApplication* parent, QSettings* settings);
   TicketCounter(const TicketCounter&) = delete;
   TicketCounter(TicketCounter&&) = delete;
   TicketCounter& operator=(const TicketCounter&) = delete;
