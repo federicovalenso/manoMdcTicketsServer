@@ -2,6 +2,7 @@ INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
 QT += core sql network
+QT -= gui
 
 SOURCES += $$PWD/controllers/ticketcountercontroller.cpp
 SOURCES += $$PWD/controllers/statisticscontroller.cpp
