@@ -3,3 +3,6 @@
 build*
 logs/
 libs/
+.qmake.stash
+Makefile
+object_script*
