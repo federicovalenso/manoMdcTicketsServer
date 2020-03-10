@@ -18,6 +18,48 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef WIN32
+#include <stdio.h>
+#include <windows.h>
+
+BOOL WINAPI CtrlHandler(DWORD fdwCtrlType) {
+  BOOL result;
+  switch (fdwCtrlType) {
+    case CTRL_C_EVENT:
+      qWarning("Application is closing by Ctrl-C event...");
+      result = TRUE;
+      break;
+
+    case CTRL_CLOSE_EVENT:
+      qWarning("Application is closing by Ctrl-Close event...");
+      result = TRUE;
+      break;
+
+    case CTRL_BREAK_EVENT:
+      qWarning("Application is closing by Ctrl-Break event...");
+      result = FALSE;
+      break;
+
+    case CTRL_LOGOFF_EVENT:
+      qWarning("Application is closing by Ctrl-Logoff event...");
+      result = FALSE;
+      break;
+
+    case CTRL_SHUTDOWN_EVENT:
+      qWarning("Application is closing by Ctrl-Shutdown event...");
+      result = FALSE;
+      break;
+
+    default:
+      qWarning("Application is closing by unknown event...");
+      result = FALSE;
+      break;
+  }
+  QCoreApplication::quit();
+  return result;
+}
+#endif
+
 #ifdef PREDEF_PLATFORM_UNIX
 #include <signal.h>
 #include <unistd.h>
@@ -56,6 +98,14 @@ int main(int argc, char* argv[]) {
 #ifdef PREDEF_PLATFORM_UNIX
   catchUnixSignals({SIGQUIT, SIGINT, SIGTERM, SIGHUP});
 #endif
+#ifdef WIN32
+  if (SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
+    qInfo("The Control Handler for Windows OS is installed.");
+  } else {
+    qWarning("Could not set control handler for Windows OS");
+    return 1;
+  }
+#endif
   Settings::InitSettings();
 
   try {
@@ -76,31 +126,34 @@ int main(int argc, char* argv[]) {
   RequestMapper::logger->installMsgHandler();
 #endif
 
-  QSettings* templateSettings =
+  auto templateSettings =
       new QSettings(settings_file, QSettings::IniFormat, &app);
   templateSettings->beginGroup("templates");
   RequestMapper::templateCache = new TemplateCache(templateSettings, &app);
 
-  QSettings* sessionSettings =
+  auto sessionSettings =
       new QSettings(settings_file, QSettings::IniFormat, &app);
   sessionSettings->beginGroup("sessions");
   RequestMapper::sessionStore = new HttpSessionStore(sessionSettings, &app);
 
-  QSettings* fileSettings =
-      new QSettings(settings_file, QSettings::IniFormat, &app);
+  auto fileSettings = new QSettings(settings_file, QSettings::IniFormat, &app);
   fileSettings->beginGroup("docroot");
   RequestMapper::staticFileController =
       new StaticFileController(fileSettings, &app);
 
-  QSettings* listenerSettings =
+  auto listenerSettings =
       new QSettings(settings_file, QSettings::IniFormat, &app);
   listenerSettings->beginGroup("listener");
   new HttpListener(listenerSettings, new RequestMapper(&app), &app);
-  new TicketCounter(&app);
+
+  auto counter_settings =
+      new QSettings(settings_file, QSettings::IniFormat, &app);
+  counter_settings->beginGroup(Settings::kCounterGroup);
+  new TicketCounter(&app, counter_settings);
 
   qWarning("Application has started");
   app.exec();
 
-  qWarning("Application has stopped");
+  qWarning("Application's been stopped");
   return 0;
 }
